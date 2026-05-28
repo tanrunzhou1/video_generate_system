@@ -31,6 +31,23 @@
 - 数据请求与状态：umi-request + @tanstack/react-query
 - 存储：本地文件系统（MVP），后续可扩展对象存储
 
+### 1.3 Python 工程约定（使用 uv）
+
+- Python 环境管理：使用 `uv`（不使用 `venv/conda/poetry`）
+- 依赖管理：使用 `uv add` / `uv remove`
+- 锁定文件：提交 `uv.lock`，保障团队与部署环境一致
+- 启动方式：使用 `uv run` 执行后端与脚本命令
+
+**推荐初始化命令（示例）**：
+
+```bash
+uv init
+uv python install 3.12
+uv venv --python 3.12
+source .venv/bin/activate
+uv add fastapi uvicorn langgraph pydantic python-multipart
+```
+
 ---
 
 ## 2. 功能需求（按模块拆解）
@@ -274,10 +291,11 @@
 
 ### 第 0 步：项目初始化
 
-1. 初始化后端工程（FastAPI）
+1. 使用 `uv` 初始化后端工程与虚拟环境（FastAPI）
 2. 初始化工作流骨架（LangGraph）
 3. 建立 `docs/`、`assets/`、`storage/`、`logs/` 目录
 4. 配置 `.env`（模型 API Key、路径、默认参数）
+5. 安装基础依赖并生成/提交 `uv.lock`
 
 ### 第 1 步：数据层与项目管理
 
