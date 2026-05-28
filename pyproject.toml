@@ -1,0 +1,32 @@
+[project]
+name = "multimediaproject"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.18.4",
+    "celery>=5.6.3",
+    "faiss-cpu>=1.14.2",
+    "fastapi>=0.136.3",
+    "langchain>=1.3.2",
+    "langgraph>=1.2.2",
+    "numpy>=2.4.6",
+    "openai>=2.38.0",
+    "opencv-python>=4.13.0.92",
+    "pillow>=12.2.0",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.1",
+    "python-multipart>=0.0.29",
+    "redis>=7.4.0",
+    "sqlalchemy>=2.0.50",
+    "uvicorn>=0.48.0",
+]
+
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+    "mypy>=2.1.0",
+    "pytest>=9.0.3",
+    "ruff>=0.15.14",
+]
