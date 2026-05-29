@@ -6,6 +6,7 @@
 - 类型：HTTP API
 - 方法/路径：`POST /api/v1/projects`
 - 目标：创建短片生成项目，进入 `created` 初始状态。
+- `project_id` 生成方式：数据库自增整数（由数据库写入时分配）。
 
 ## 2. 请求定义
 
@@ -40,7 +41,7 @@
   "code": 0,
   "message": "ok",
   "data": {
-    "project_id": "prj_01J...",
+    "project_id": 1001,
     "name": "我的毕业设计短片",
     "status": "created",
     "target_duration_sec": 60,

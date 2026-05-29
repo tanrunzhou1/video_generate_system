@@ -17,7 +17,7 @@ class ApiResponse(BaseModel):
 
 
 class ProjectCreatedData(BaseModel):
-    project_id: str
+    project_id: int
     name: str
     status: str
     target_duration_sec: int
@@ -31,13 +31,13 @@ class UploadedAssetItem(BaseModel):
 
 
 class UploadAssetsData(BaseModel):
-    project_id: str
+    project_id: int
     uploaded: list[UploadedAssetItem]
     failed: list[dict]
 
 
 class ProjectStatusData(BaseModel):
-    project_id: str
+    project_id: int
     status: str
     current_stage: str | None
     progress: int | None

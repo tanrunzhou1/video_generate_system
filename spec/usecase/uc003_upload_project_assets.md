@@ -34,12 +34,12 @@
   "code": 0,
   "message": "ok",
   "data": {
-    "project_id": "prj_01J...",
+    "project_id": 1001,
     "uploaded": [
       {
         "asset_id": "ast_01J...",
         "asset_type": "script_file",
-        "file_path": "storage/projects/prj_01J.../script/xxx.md"
+        "file_path": "storage/projects/1001/script_file/xxx.md"
       }
     ],
     "failed": []

@@ -22,7 +22,7 @@
   "code": 0,
   "message": "ok",
   "data": {
-    "project_id": "prj_01J...",
+    "project_id": 1001,
     "status": "running",
     "current_stage": "script_parse",
     "progress": 35,

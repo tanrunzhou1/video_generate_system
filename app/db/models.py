@@ -45,6 +45,7 @@ class Project(Base):
     __tablename__ = "project"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    project_no: Mapped[int | None] = mapped_column(Integer, unique=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     description: Mapped[str | None] = mapped_column(Text)
     target_duration_sec: Mapped[int] = mapped_column(Integer, nullable=False)
