@@ -1,0 +1,60 @@
+# 用例总览（Usecases）
+
+## 范围
+
+本文档描述当前服务的外部入口与主要用例映射。
+
+## 已识别入口
+
+### UC001 - 健康检查
+
+- 类型：HTTP GET
+- 路径：`/health`
+- 代码位置：`app/api/health.py`
+- 目标：返回服务存活状态和基础运行环境标识。
+- 当前状态：已实现
+
+## 来自 PRD 的规划入口（尚未完整实现）
+
+### UC002 - 创建项目
+
+- 类型：HTTP POST
+- 路径：`/api/v1/projects`
+- 目标：创建短片生成项目并写入元数据。
+- 当前状态：TODO
+
+### UC003 - 上传项目素材
+
+- 类型：HTTP POST（multipart）
+- 路径：`/api/v1/projects/{project_id}/assets`
+- 目标：上传剧本、人设图、人设文档等输入素材。
+- 当前状态：TODO
+
+### UC004 - 查询项目状态
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/status`
+- 目标：返回项目生命周期状态与处理进度。
+- 当前状态：TODO
+
+### UC005 - 查询项目详情
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}`
+- 目标：返回项目详情与关联产物摘要。
+- 当前状态：TODO
+
+## 内部工作流入口
+
+### UC006 - 工作流剧本解析
+
+- 类型：内部工作流节点
+- 节点：`parse_script`
+- 代码位置：`app/workflow/graph.py`
+- 目标：将原始剧本转换为可用于分镜的数据结构。
+- 当前状态：骨架实现（`shots=[]`，`status=script_parsed`）
+
+## 说明
+
+- PRD 已定义完整端到端能力，当前代码仍处于初始化阶段。
+- 详细用例见 `spec/usecase/uc*_*.md`。
