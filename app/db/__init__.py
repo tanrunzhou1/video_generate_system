@@ -3,6 +3,7 @@ from app.db.models import (
     BgmAsset,
     CharacterProfile,
     FinalVideo,
+    ProjectAsset,
     Project,
     RenderTask,
     ScriptScene,
@@ -24,4 +25,5 @@ __all__ = [
     "BgmAsset",
     "RenderTask",
     "FinalVideo",
+    "ProjectAsset",
 ]

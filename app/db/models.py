@@ -34,6 +34,13 @@ class RenderTaskStatus(str, Enum):
     FAILED = "failed"
 
 
+class ProjectAssetType(str, Enum):
+    SCRIPT_FILE = "script_file"
+    PERSONA_DOC = "persona_doc"
+    CHARACTER_IMAGE = "character_image"
+    STYLE_REFERENCE = "style_reference"
+
+
 class Project(Base):
     __tablename__ = "project"
 
@@ -172,4 +179,20 @@ class FinalVideo(Base):
     duration_sec: Mapped[float] = mapped_column(Float, nullable=False)
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)
     cover_image_path: Mapped[str | None] = mapped_column(String(512))
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class ProjectAsset(Base):
+    __tablename__ = "project_asset"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False)
+    asset_type: Mapped[ProjectAssetType] = mapped_column(
+        SqlEnum(ProjectAssetType, name="project_asset_type"), nullable=False
+    )
+    file_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(128), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
