@@ -44,8 +44,7 @@ class ProjectAssetType(str, Enum):
 class Project(Base):
     __tablename__ = "project"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_no: Mapped[int | None] = mapped_column(Integer, unique=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     description: Mapped[str | None] = mapped_column(Text)
     target_duration_sec: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -64,8 +63,8 @@ class Project(Base):
 class CharacterProfile(Base):
     __tablename__ = "character_profile"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     persona_text: Mapped[str] = mapped_column(Text, nullable=False)
     voice_style: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -77,8 +76,8 @@ class CharacterProfile(Base):
 class ScriptScene(Base):
     __tablename__ = "script_scene"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
     scene_index: Mapped[int] = mapped_column(Integer, nullable=False)
     scene_text: Mapped[str] = mapped_column(Text, nullable=False)
     mood: Mapped[str | None] = mapped_column(String(64))
@@ -88,9 +87,9 @@ class ScriptScene(Base):
 class ShotPlan(Base):
     __tablename__ = "shot_plan"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
-    scene_id: Mapped[str] = mapped_column(ForeignKey("script_scene.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    scene_id: Mapped[int] = mapped_column(ForeignKey("script_scene.id"), nullable=False, index=True)
     shot_index: Mapped[int] = mapped_column(Integer, nullable=False)
     duration_sec: Mapped[float] = mapped_column(Float, nullable=False)
     characters: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
@@ -104,9 +103,9 @@ class ShotPlan(Base):
 class VisualAsset(Base):
     __tablename__ = "visual_asset"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
-    shot_id: Mapped[str] = mapped_column(ForeignKey("shot_plan.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    shot_id: Mapped[int] = mapped_column(ForeignKey("shot_plan.id"), nullable=False, index=True)
     asset_type: Mapped[AssetType] = mapped_column(SqlEnum(AssetType, name="asset_type"), nullable=False)
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)
     provider: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -119,10 +118,10 @@ class VisualAsset(Base):
 class VoiceAsset(Base):
     __tablename__ = "voice_asset"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
-    shot_id: Mapped[str] = mapped_column(ForeignKey("shot_plan.id"), nullable=False, index=True)
-    character_id: Mapped[str] = mapped_column(ForeignKey("character_profile.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    shot_id: Mapped[int] = mapped_column(ForeignKey("shot_plan.id"), nullable=False, index=True)
+    character_id: Mapped[int] = mapped_column(ForeignKey("character_profile.id"), nullable=False, index=True)
     line_text: Mapped[str] = mapped_column(Text, nullable=False)
     voice_provider: Mapped[str] = mapped_column(String(128), nullable=False)
     audio_path: Mapped[str] = mapped_column(String(512), nullable=False)
@@ -133,9 +132,9 @@ class VoiceAsset(Base):
 class SubtitleSegment(Base):
     __tablename__ = "subtitle_segment"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
-    shot_id: Mapped[str] = mapped_column(ForeignKey("shot_plan.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    shot_id: Mapped[int] = mapped_column(ForeignKey("shot_plan.id"), nullable=False, index=True)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     start_time_sec: Mapped[float] = mapped_column(Float, nullable=False)
     end_time_sec: Mapped[float] = mapped_column(Float, nullable=False)
@@ -144,8 +143,8 @@ class SubtitleSegment(Base):
 class BgmAsset(Base):
     __tablename__ = "bgm_asset"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)
     mood_tag: Mapped[str | None] = mapped_column(String(64))
     start_time_sec: Mapped[float] = mapped_column(Float, nullable=False)
@@ -156,8 +155,8 @@ class BgmAsset(Base):
 class RenderTask(Base):
     __tablename__ = "render_task"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
     stage: Mapped[str] = mapped_column(String(128), nullable=False)
     status: Mapped[RenderTaskStatus] = mapped_column(
         SqlEnum(RenderTaskStatus, name="render_task_status"),
@@ -174,8 +173,8 @@ class RenderTask(Base):
 class FinalVideo(Base):
     __tablename__ = "final_video"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
     resolution: Mapped[str] = mapped_column(String(32), nullable=False)
     duration_sec: Mapped[float] = mapped_column(Float, nullable=False)
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)
@@ -186,8 +185,8 @@ class FinalVideo(Base):
 class ProjectAsset(Base):
     __tablename__ = "project_asset"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    project_id: Mapped[str] = mapped_column(ForeignKey("project.id"), nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False)
     asset_type: Mapped[ProjectAssetType] = mapped_column(
         SqlEnum(ProjectAssetType, name="project_asset_type"), nullable=False
     )

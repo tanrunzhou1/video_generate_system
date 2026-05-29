@@ -2,7 +2,7 @@ from typing import TypedDict
 from langgraph.graph import StateGraph, END
 
 class WorkflowState(TypedDict, total=False):
-    project_id: str
+    project_id: int
     script_text: str
     shots: list
     status: str

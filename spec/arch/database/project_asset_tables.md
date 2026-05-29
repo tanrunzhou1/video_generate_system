@@ -7,7 +7,7 @@ PRD 要求“上传输入素材（剧本、人设图、人设文档、可选风�
 ## 2. 表定义
 
 - 表名：`project_asset`
-- 主键：`id`（string, 64）
+- 主键：`id`（int，自增）
 - 外键：`project_id -> project.id`
 
 ### 字段

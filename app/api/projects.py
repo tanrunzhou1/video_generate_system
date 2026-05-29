@@ -1,5 +1,4 @@
 from pathlib import Path
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.exc import IntegrityError
@@ -25,13 +24,8 @@ from app.schemas.project import (
 router = APIRouter(prefix="/api/v1/projects", tags=["projects"])
 settings = get_settings()
 
-
-def _new_id(prefix: str) -> str:
-    return f"{prefix}_{uuid4().hex[:16]}"
-
-
-def _save_upload_file(project_no: int, asset_type: str, file: UploadFile) -> tuple[str, int]:
-    base = Path(settings.storage_dir) / "projects" / str(project_no) / asset_type
+def _save_upload_file(project_id: int, asset_type: str, file: UploadFile) -> tuple[str, int]:
+    base = Path(settings.storage_dir) / "projects" / str(project_id) / asset_type
     base.mkdir(parents=True, exist_ok=True)
     filename = file.filename or f"{asset_type}.bin"
     dst = base / filename
@@ -51,7 +45,6 @@ def create_project(payload: CreateProjectRequest, db: Session = Depends(get_db))
         raise HTTPException(status_code=409, detail="project name already exists")
 
     project = Project(
-        id=_new_id("prj"),
         name=normalized_name,
         description=payload.description,
         target_duration_sec=payload.target_duration_sec,
@@ -67,7 +60,7 @@ def create_project(payload: CreateProjectRequest, db: Session = Depends(get_db))
     db.refresh(project)
     return ApiResponse(
         data={
-            "project_id": project.project_no,
+            "project_id": project.id,
             "name": project.name,
             "status": project.status.value,
             "target_duration_sec": project.target_duration_sec,
@@ -85,7 +78,7 @@ def upload_project_assets(
     style_reference: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
 ) -> ApiResponse:
-    project = db.execute(select(Project).where(Project.project_no == project_id)).scalar_one_or_none()
+    project = db.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="project not found")
 
@@ -101,7 +94,6 @@ def upload_project_assets(
     for asset_type, file in uploads:
         file_path, size_bytes = _save_upload_file(project_id, asset_type.value, file)
         asset = ProjectAsset(
-            id=_new_id("ast"),
             project_id=project.id,
             asset_type=asset_type,
             file_path=file_path,
@@ -127,7 +119,7 @@ def upload_project_assets(
 
 @router.get("/{project_id}/status", response_model=ApiResponse)
 def get_project_status(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
-    project = db.execute(select(Project).where(Project.project_no == project_id)).scalar_one_or_none()
+    project = db.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="project not found")
 
@@ -136,7 +128,7 @@ def get_project_status(project_id: int, db: Session = Depends(get_db)) -> ApiRes
     ).scalars().first()
 
     data = ProjectStatusData(
-        project_id=project.project_no or 0,
+        project_id=project.id,
         status=project.status.value,
         current_stage=latest_task.stage if latest_task else None,
         progress=None,

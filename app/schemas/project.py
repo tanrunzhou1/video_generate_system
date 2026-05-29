@@ -25,7 +25,7 @@ class ProjectCreatedData(BaseModel):
 
 
 class UploadedAssetItem(BaseModel):
-    asset_id: str
+    asset_id: int
     asset_type: str
     file_path: str
 
