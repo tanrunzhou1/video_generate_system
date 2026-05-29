@@ -2,6 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
@@ -41,16 +42,28 @@ def _save_upload_file(project_id: str, asset_type: str, file: UploadFile) -> tup
 
 @router.post("", response_model=ApiResponse)
 def create_project(payload: CreateProjectRequest, db: Session = Depends(get_db)) -> ApiResponse:
+    normalized_name = payload.name.strip()
+    if not normalized_name:
+        raise HTTPException(status_code=400, detail="project name cannot be blank")
+
+    existing = db.execute(select(Project.id).where(Project.name == normalized_name)).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="project name already exists")
+
     project = Project(
         id=_new_id("prj"),
-        name=payload.name.strip(),
+        name=normalized_name,
         description=payload.description,
         target_duration_sec=payload.target_duration_sec,
         style_preset=payload.style_preset,
         status=ProjectStatus.CREATED,
     )
     db.add(project)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="project name already exists")
     db.refresh(project)
     return ApiResponse(
         data={

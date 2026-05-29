@@ -45,7 +45,7 @@ class Project(Base):
     __tablename__ = "project"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     description: Mapped[str | None] = mapped_column(Text)
     target_duration_sec: Mapped[int] = mapped_column(Integer, nullable=False)
     style_preset: Mapped[str | None] = mapped_column(String(128))
