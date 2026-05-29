@@ -37,7 +37,7 @@
     "project_id": 1001,
     "uploaded": [
       {
-        "asset_id": "ast_01J...",
+        "asset_id": 1,
         "asset_type": "script_file",
         "file_path": "storage/projects/1001/script_file/xxx.md"
       }
@@ -68,3 +68,29 @@
 
 - 对齐模块：2.1 项目管理模块（上传输入素材）
 - 对齐验收：任务创建与素材上传流程可在短时间内完成。
+
+## 7. Postman 测试步骤
+
+### 前置条件
+
+1. 服务已启动（`make dev`）。
+2. 先调用 `UC002` 创建项目，拿到 `project_id`（int）。
+3. 本地准备测试文件：`script.md`、`persona.md`、`a.jpg`、`b.jpg`。
+
+### 请求配置
+
+- Method: `POST`
+- URL: `http://127.0.0.1:8000/api/v1/projects/{{project_id}}/assets`
+- Body: `form-data`
+  - `script_file`（File）= `script.md`
+  - `persona_doc`（File）= `persona.md`
+  - `character_images`（File）= `a.jpg`
+  - `character_images`（File）= `b.jpg`
+  - `style_reference`（File，可选）= `style.jpg`
+
+### 成功判定
+
+1. HTTP 状态码为 `200`。
+2. 返回体 `code=0`、`data.project_id={{project_id}}`。
+3. `data.uploaded` 数组长度大于等于 4（不含可选风格图时）。
+4. 数据库可查到素材记录（`project_asset` 表）。
