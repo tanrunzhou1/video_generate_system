@@ -21,21 +21,24 @@
 - 类型：HTTP POST
 - 路径：`/api/v1/projects`
 - 目标：创建短片生成项目并写入元数据。
-- 当前状态：TODO
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc002_create_project.md`
 
 ### UC003 - 上传项目素材
 
 - 类型：HTTP POST（multipart）
 - 路径：`/api/v1/projects/{project_id}/assets`
 - 目标：上传剧本、人设图、人设文档等输入素材。
-- 当前状态：TODO
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc003_upload_project_assets.md`
 
 ### UC004 - 查询项目状态
 
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}/status`
 - 目标：返回项目生命周期状态与处理进度。
-- 当前状态：TODO
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc004_query_project_status.md`
 
 ### UC005 - 查询项目详情
 
