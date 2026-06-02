@@ -20,9 +20,6 @@
 - `QWEN_API_KEY`
 - `QWEN_BASE_URL`
 - `QWEN_MODEL`
-- `OPENAI_API_KEY`
-- `OPENAI_BASE_URL`
-- `OPENAI_MODEL`
 
 ### 媒体工具
 

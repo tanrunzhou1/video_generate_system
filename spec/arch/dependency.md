@@ -13,7 +13,6 @@
 
 - `langgraph`
 - `langchain`
-- `openai`
 
 ### 数据与基础设施
 
@@ -32,7 +31,6 @@
 ## 2. 规划中的外部依赖
 
 - Qwen API（已配置，尚未接入 workflow 业务节点）
-- OpenAI-compatible API（已配置，尚未接入 workflow 业务节点）
 - FFmpeg 可执行文件（用于音视频合成）
 
 ## 3. 当前耦合关系

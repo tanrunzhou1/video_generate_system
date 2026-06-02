@@ -61,7 +61,7 @@
 
 ### 多模态模型
 
-- 剧本理解/分镜规划：LLM（OpenAI/Qwen/Claude 等）
+- 剧本理解/分镜规划：LLM（当前默认 Qwen，后续可扩展其他模型）
 - 图像生成：SDXL 或 FLUX
 - 语音生成：XTTS / Edge-TTS / ElevenLabs
 - 可选视频生成：Runway/Pika/Luma API 或开源视频模型
