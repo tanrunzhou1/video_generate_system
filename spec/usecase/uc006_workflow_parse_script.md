@@ -52,10 +52,10 @@ MVP 阶段目标输出：
 
 ### 当前代码状态
 
-- 当前实现仅返回：
-  - `status = "script_parsed"`
-  - `shots = []`
-- 尚未接入真实 LLM 拆解逻辑
+- 已接入 Qwen 解析调用
+- 已返回结构化 `shots`
+- 已打通 `render_task` 任务日志链路
+- 已将解析结果落库到 `script_scene`、`shot_plan`
 
 ## 4. 处理流程
 
@@ -91,14 +91,21 @@ MVP 阶段目标输出：
 
 ## 8. 当前差距
 
-1. 尚未接入 Qwen 或其他 LLM
-2. 尚未定义 `shots` 的稳定 Pydantic/TypedDict 结构
-3. 尚未将解析结果落库到 `script_scene`、`shot_plan`
-4. 尚未与 `render_task` 日志链路打通
+1. 尚未增加对 Qwen 返回异常格式的更多修复策略
+2. 尚未提供独立 HTTP 接口触发 `parse_script`
+3. 尚未把解析结果进一步转换为更完整的业务字段（如机位、情绪）
+4. 尚未增加失败重试与超时控制
 
-## 9. 后续实现建议
+## 9. 当前实现说明
 
-1. 先定义 `ShotDraft` 数据结构，固定节点输出格式
-2. 增加 `script_text` 为空的校验逻辑
-3. 接入 LLM 后增加解析失败重试机制
-4. 将结果同步写入 `script_scene` 和 `shot_plan`
+1. 已定义 `ShotDraft` 数据结构并校验返回格式
+2. 已增加 `script_text` 为空的失败逻辑
+3. 已把解析结果同步写入 `script_scene` 和 `shot_plan`
+4. 已通过工作流节点自动创建任务记录并写入日志
+
+## 10. 后续实现建议
+
+1. 增加重试与超时控制
+2. 为 `parse_script` 增加独立 API 或任务触发入口
+3. 丰富 `shots` 结构，补充镜头情绪、机位等字段
+4. 视需要支持多模型切换或 mock 模式

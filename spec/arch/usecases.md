@@ -56,7 +56,7 @@
 - 节点：`parse_script`
 - 代码位置：`app/workflow/graph.py`
 - 目标：将原始剧本转换为可用于分镜的数据结构。
-- 当前状态：SPEC_READY
+- 当前状态：IMPLEMENTED_MVP
 - 详细文档：`spec/usecase/uc006_workflow_parse_script.md`
 
 ### UC007 - 任务日志关联
