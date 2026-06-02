@@ -69,3 +69,12 @@ class TaskLogData(BaseModel):
     error_message: str | None
     log_file_path: str
     log_content: str
+
+
+class ParseScriptTriggeredData(BaseModel):
+    project_id: int
+    task_id: int
+    status: str
+    workflow_status: str
+    shot_count: int
+    log_file_path: str

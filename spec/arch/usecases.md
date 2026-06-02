@@ -54,6 +54,7 @@
 
 - 类型：内部工作流节点
 - 节点：`parse_script`
+- 辅助触发接口：`POST /api/v1/projects/{project_id}/parse-script`
 - 代码位置：`app/workflow/graph.py`
 - 目标：将原始剧本转换为可用于分镜的数据结构。
 - 当前状态：IMPLEMENTED_MVP

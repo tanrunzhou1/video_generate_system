@@ -15,11 +15,13 @@ from app.db.models import (
     RenderTask,
 )
 from app.db.session import get_db
+from app.workflow import graph as workflow_graph
 from app.services.task_log import create_task_with_log
 from app.schemas.project import (
     ApiResponse,
     CreateTaskRequest,
     CreateProjectRequest,
+    ParseScriptTriggeredData,
     ProjectStatusData,
     TaskCreatedData,
     UploadedAssetItem,
@@ -65,6 +67,22 @@ def _save_upload_file(project_id: int, asset_type: str, file: UploadFile) -> tup
     content = file.file.read()
     dst.write_bytes(content)
     return str(dst), len(content)
+
+
+def _get_latest_script_asset(db: Session, project_id: int) -> ProjectAsset | None:
+    return (
+        db.execute(
+            select(ProjectAsset)
+            .where(
+                ProjectAsset.project_id == project_id,
+                ProjectAsset.asset_type == ProjectAssetType.SCRIPT_FILE,
+                ProjectAsset.is_active.is_(True),
+            )
+            .order_by(desc(ProjectAsset.created_at), desc(ProjectAsset.id))
+        )
+        .scalars()
+        .first()
+    )
 
 
 @router.post("", response_model=ApiResponse)
@@ -122,6 +140,60 @@ def create_project_task(
         stage=task.stage,
         status=task.status.value,
         log_file_path=task.log_file_path or "",
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.post("/{project_id}/parse-script", response_model=ApiResponse)
+def trigger_parse_script(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    project = db.get(Project, project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="project not found")
+
+    script_asset = _get_latest_script_asset(db, project.id)
+    if script_asset is None:
+        raise HTTPException(status_code=400, detail="script_file asset not found")
+
+    script_path = Path(script_asset.file_path)
+    if not script_path.exists():
+        raise HTTPException(status_code=404, detail="script file not found")
+
+    script_text = script_path.read_text(encoding="utf-8").strip()
+    if not script_text:
+        raise HTTPException(status_code=400, detail="script file is empty")
+
+    try:
+        workflow_result = workflow_graph.workflow.invoke(
+            {
+                "project_id": project.id,
+                "script_text": script_text,
+                "shots": [],
+                "status": project.status.value,
+            }
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    db.expire_all()
+    latest_task = (
+        db.execute(
+            select(RenderTask)
+            .where(RenderTask.project_id == project.id, RenderTask.stage == "script_parse")
+            .order_by(desc(RenderTask.id))
+        )
+        .scalars()
+        .first()
+    )
+    if latest_task is None:
+        raise HTTPException(status_code=500, detail="script parse task not created")
+
+    data = ParseScriptTriggeredData(
+        project_id=project.id,
+        task_id=latest_task.id,
+        status=latest_task.status.value,
+        workflow_status=workflow_result.get("status", latest_task.status.value),
+        shot_count=len(workflow_result.get("shots", [])),
+        log_file_path=latest_task.log_file_path or "",
     )
     return ApiResponse(data=data.model_dump())
 

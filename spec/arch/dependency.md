@@ -30,14 +30,14 @@
 
 ## 2. 规划中的外部依赖
 
-- Qwen API（已配置，尚未接入 workflow 业务节点）
+- Qwen API（已配置，并已接入 `UC006` 剧本解析工作流）
 - FFmpeg 可执行文件（用于音视频合成）
 
 ## 3. 当前耦合关系
 
 - API 层依赖 settings 加载。
 - 迁移运行时依赖 settings + ORM metadata。
-- 当前 workflow 为骨架实现，无外部副作用。
+- 当前 `parse_script` 工作流已调用 Qwen，并会落库分镜结果与写入任务日志。
 
 ## 4. TODO / NEED_VERIFY
 

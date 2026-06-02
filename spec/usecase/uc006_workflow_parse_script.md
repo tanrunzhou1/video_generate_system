@@ -56,6 +56,7 @@ MVP 阶段目标输出：
 - 已返回结构化 `shots`
 - 已打通 `render_task` 任务日志链路
 - 已将解析结果落库到 `script_scene`、`shot_plan`
+- 已提供辅助 HTTP 触发入口 `POST /api/v1/projects/{project_id}/parse-script`
 
 ## 4. 处理流程
 
@@ -92,9 +93,8 @@ MVP 阶段目标输出：
 ## 8. 当前差距
 
 1. 尚未增加对 Qwen 返回异常格式的更多修复策略
-2. 尚未提供独立 HTTP 接口触发 `parse_script`
-3. 尚未把解析结果进一步转换为更完整的业务字段（如机位、情绪）
-4. 尚未增加失败重试与超时控制
+2. 尚未把解析结果进一步转换为更完整的业务字段（如机位、情绪）
+3. 尚未增加失败重试与超时控制
 
 ## 9. 当前实现说明
 
@@ -102,10 +102,40 @@ MVP 阶段目标输出：
 2. 已增加 `script_text` 为空的失败逻辑
 3. 已把解析结果同步写入 `script_scene` 和 `shot_plan`
 4. 已通过工作流节点自动创建任务记录并写入日志
+5. 已支持通过项目维度的辅助接口读取已上传 `script_file` 并触发工作流解析
+
+## 9.1 辅助接口定义
+
+- Method/Path：`POST /api/v1/projects/{project_id}/parse-script`
+- 目标：读取项目已上传的最新有效 `script_file`，同步触发 `parse_script` 工作流，并返回本次任务摘要
+
+### 成功响应示例
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "project_id": 12,
+    "task_id": 37,
+    "status": "succeeded",
+    "workflow_status": "script_parsed",
+    "shot_count": 2,
+    "log_file_path": "logs/tasks/project_12/task_37.log"
+  }
+}
+```
+
+### 失败场景
+
+1. 项目不存在：返回 `404`
+2. 未上传 `script_file`：返回 `400`
+3. 剧本文件不存在：返回 `404`
+4. 剧本文件为空：返回 `400`
 
 ## 10. 后续实现建议
 
 1. 增加重试与超时控制
-2. 为 `parse_script` 增加独立 API 或任务触发入口
+2. 为 `parse_script` 触发入口增加异步执行、轮询状态或后台任务能力
 3. 丰富 `shots` 结构，补充镜头情绪、机位等字段
 4. 视需要支持多模型切换或 mock 模式
