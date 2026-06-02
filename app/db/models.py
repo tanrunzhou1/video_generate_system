@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -62,6 +62,7 @@ class Project(Base):
 
 class CharacterProfile(Base):
     __tablename__ = "character_profile"
+    __table_args__ = (UniqueConstraint("project_id", "name", name="uq_character_profile_project_name"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
@@ -71,6 +72,7 @@ class CharacterProfile(Base):
     reference_image_paths: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     prompt_constraints: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     seed_policy: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
 class ScriptScene(Base):

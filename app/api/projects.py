@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.settings import get_settings
 from app.db.models import (
+    CharacterProfile,
     FinalVideo,
     Project,
     ProjectAsset,
@@ -19,6 +20,11 @@ from app.workflow import graph as workflow_graph
 from app.services.task_log import create_task_with_log
 from app.schemas.project import (
     ApiResponse,
+    CharacterProfileCreatedData,
+    CharacterProfileDetailData,
+    CharacterProfileListData,
+    CharacterProfileListItem,
+    CreateCharacterProfileRequest,
     CreateTaskRequest,
     CreateProjectRequest,
     ParseScriptTriggeredData,
@@ -85,6 +91,56 @@ def _get_latest_script_asset(db: Session, project_id: int) -> ProjectAsset | Non
     )
 
 
+def _require_project(db: Session, project_id: int) -> Project:
+    project = db.get(Project, project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="project not found")
+    return project
+
+
+def _load_character_reference_assets(
+    db: Session,
+    project_id: int,
+    asset_ids: list[int],
+) -> list[ProjectAsset]:
+    if not asset_ids:
+        raise HTTPException(status_code=400, detail="reference_image_asset_ids cannot be empty")
+
+    assets = (
+        db.execute(
+            select(ProjectAsset).where(
+                ProjectAsset.project_id == project_id,
+                ProjectAsset.id.in_(asset_ids),
+                ProjectAsset.is_active.is_(True),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assets_by_id = {asset.id: asset for asset in assets}
+
+    resolved_assets: list[ProjectAsset] = []
+    for asset_id in asset_ids:
+        asset = assets_by_id.get(asset_id)
+        if asset is None or asset.asset_type != ProjectAssetType.CHARACTER_IMAGE:
+            raise HTTPException(status_code=400, detail="invalid character_image asset reference")
+        resolved_assets.append(asset)
+    return resolved_assets
+
+
+def _build_character_profile_detail(character: CharacterProfile) -> CharacterProfileDetailData:
+    return CharacterProfileDetailData(
+        character_id=character.id,
+        project_id=character.project_id,
+        name=character.name,
+        persona_text=character.persona_text,
+        voice_style=character.voice_style,
+        reference_image_paths=list(character.reference_image_paths or []),
+        prompt_constraints=dict(character.prompt_constraints or {}),
+        seed_policy=dict(character.seed_policy or {}),
+    )
+
+
 @router.post("", response_model=ApiResponse)
 def create_project(payload: CreateProjectRequest, db: Session = Depends(get_db)) -> ApiResponse:
     normalized_name = payload.name.strip()
@@ -126,9 +182,7 @@ def create_project_task(
     payload: CreateTaskRequest,
     db: Session = Depends(get_db),
 ) -> ApiResponse:
-    project = db.get(Project, project_id)
-    if project is None:
-        raise HTTPException(status_code=404, detail="project not found")
+    project = _require_project(db, project_id)
 
     task = create_task_with_log(db, project_id=project.id, stage=payload.stage.strip())
     db.commit()
@@ -146,9 +200,7 @@ def create_project_task(
 
 @router.post("/{project_id}/parse-script", response_model=ApiResponse)
 def trigger_parse_script(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
-    project = db.get(Project, project_id)
-    if project is None:
-        raise HTTPException(status_code=404, detail="project not found")
+    project = _require_project(db, project_id)
 
     script_asset = _get_latest_script_asset(db, project.id)
     if script_asset is None:
@@ -198,6 +250,102 @@ def trigger_parse_script(project_id: int, db: Session = Depends(get_db)) -> ApiR
     return ApiResponse(data=data.model_dump())
 
 
+@router.post("/{project_id}/characters", response_model=ApiResponse)
+def create_character_profile(
+    project_id: int,
+    payload: CreateCharacterProfileRequest,
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    project = _require_project(db, project_id)
+    normalized_name = payload.name.strip()
+    persona_text = payload.persona_text.strip()
+    voice_style = payload.voice_style.strip()
+
+    if not normalized_name:
+        raise HTTPException(status_code=400, detail="character name cannot be blank")
+    if not persona_text:
+        raise HTTPException(status_code=400, detail="persona_text cannot be blank")
+    if not voice_style:
+        raise HTTPException(status_code=400, detail="voice_style cannot be blank")
+
+    existing = db.execute(
+        select(CharacterProfile.id).where(
+            CharacterProfile.project_id == project.id,
+            CharacterProfile.name == normalized_name,
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="character name already exists in project")
+
+    reference_assets = _load_character_reference_assets(db, project.id, payload.reference_image_asset_ids)
+    character = CharacterProfile(
+        project_id=project.id,
+        name=normalized_name,
+        persona_text=persona_text,
+        voice_style=voice_style,
+        reference_image_paths=[asset.file_path for asset in reference_assets],
+        prompt_constraints=dict(payload.prompt_constraints or {}),
+        seed_policy=dict(payload.seed_policy or {}),
+    )
+    db.add(character)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="character name already exists in project")
+    db.refresh(character)
+
+    data = CharacterProfileCreatedData(
+        character_id=character.id,
+        project_id=project.id,
+        name=character.name,
+        voice_style=character.voice_style,
+        reference_image_paths=list(character.reference_image_paths or []),
+        created_at=character.created_at,
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.get("/{project_id}/characters", response_model=ApiResponse)
+def list_character_profiles(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    project = _require_project(db, project_id)
+    items = (
+        db.execute(
+            select(CharacterProfile)
+            .where(CharacterProfile.project_id == project.id)
+            .order_by(CharacterProfile.created_at.asc(), CharacterProfile.id.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+    data = CharacterProfileListData(
+        project_id=project.id,
+        items=[
+            CharacterProfileListItem(
+                character_id=item.id,
+                name=item.name,
+                voice_style=item.voice_style,
+                reference_image_count=len(item.reference_image_paths or []),
+                created_at=item.created_at,
+            )
+            for item in items
+        ],
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.get("/{project_id}/characters/{character_id}", response_model=ApiResponse)
+def get_character_profile_detail(project_id: int, character_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    project = _require_project(db, project_id)
+    character = db.get(CharacterProfile, character_id)
+    if character is None or character.project_id != project.id:
+        raise HTTPException(status_code=404, detail="character not found")
+
+    data = _build_character_profile_detail(character)
+    return ApiResponse(data=data.model_dump())
+
+
 @router.post("/{project_id}/assets", response_model=ApiResponse)
 def upload_project_assets(
     project_id: int,
@@ -207,9 +355,7 @@ def upload_project_assets(
     style_reference: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
 ) -> ApiResponse:
-    project = db.get(Project, project_id)
-    if project is None:
-        raise HTTPException(status_code=404, detail="project not found")
+    project = _require_project(db, project_id)
 
     uploads: list[tuple[ProjectAssetType, UploadFile]] = [
         (ProjectAssetType.SCRIPT_FILE, script_file),
@@ -249,9 +395,7 @@ def upload_project_assets(
 
 @router.get("/{project_id}/status", response_model=ApiResponse)
 def get_project_status(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
-    project = db.get(Project, project_id)
-    if project is None:
-        raise HTTPException(status_code=404, detail="project not found")
+    project = _require_project(db, project_id)
 
     latest_task = db.execute(
         select(RenderTask).where(RenderTask.project_id == project.id).order_by(desc(RenderTask.started_at))
@@ -272,9 +416,7 @@ def get_project_status(project_id: int, db: Session = Depends(get_db)) -> ApiRes
 
 @router.get("/{project_id}", response_model=ApiResponse)
 def get_project_detail(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
-    project = db.get(Project, project_id)
-    if project is None:
-        raise HTTPException(status_code=404, detail="project not found")
+    project = _require_project(db, project_id)
 
     assets = db.execute(
         select(ProjectAsset).where(ProjectAsset.project_id == project.id, ProjectAsset.is_active.is_(True))

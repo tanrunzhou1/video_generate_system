@@ -76,6 +76,30 @@
 - 当前状态：IMPLEMENTED_MVP
 - 详细文档：`spec/usecase/uc008_get_task_logs.md`
 
+### UC009 - 创建角色档案
+
+- 类型：HTTP POST
+- 路径：`/api/v1/projects/{project_id}/characters`
+- 目标：为项目创建角色档案，沉淀角色参考图、提示词约束与 seed 策略。
+- 当前状态：已实现
+- 详细文档：`spec/usecase/uc009_create_character_profile.md`
+
+### UC010 - 查询角色列表
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/characters`
+- 目标：返回项目下全部角色档案摘要。
+- 当前状态：已实现
+- 详细文档：`spec/usecase/uc010_list_character_profiles.md`
+
+### UC011 - 查询角色详情
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/characters/{character_id}`
+- 目标：返回单个角色档案完整详情，供后续视觉生成与人工校验使用。
+- 当前状态：已实现
+- 详细文档：`spec/usecase/uc011_get_character_profile_detail.md`
+
 ## 说明
 
 - PRD 已定义完整端到端能力，当前代码仍处于初始化阶段。
