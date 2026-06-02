@@ -20,6 +20,8 @@
 - `QWEN_API_KEY`
 - `QWEN_BASE_URL`
 - `QWEN_MODEL`
+- `QWEN_IMAGE_MODEL`（建议：`qwen-image-2.0`）
+- `QWEN_IMAGE_API_URL`（若视觉生成与 LLM 地址分离）
 
 ### 媒体工具
 
@@ -55,3 +57,4 @@
   - 将 `LOGS_DIR` 与 `render_task.log_file_path` 打通，用于任务日志定位
   - 将工作流超时/重试/Top-K 配置接入执行节点
   - 将模型服务配置接入 LLM/TTS/视觉生成适配器
+  - 为视觉生成补“项目默认分辨率 + 系统默认分辨率”的优先级配置
