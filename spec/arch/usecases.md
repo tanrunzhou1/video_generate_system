@@ -105,7 +105,7 @@
 - 类型：HTTP POST
 - 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/visual-assets`
 - 目标：基于镜头分镜与角色约束，调用 `qwen-image-2.0` 生成 1 份图片素材并落库。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc012_generate_visual_asset.md`
 
 ### UC013 - 查询镜头视觉素材列表
@@ -113,7 +113,7 @@
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/visual-assets`
 - 目标：按镜头返回已生成的图片素材列表。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc013_list_visual_assets_by_shot.md`
 
 ## 说明

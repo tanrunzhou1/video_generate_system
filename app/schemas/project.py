@@ -120,3 +120,28 @@ class CharacterProfileDetailData(BaseModel):
     reference_image_paths: list[str]
     prompt_constraints: dict
     seed_policy: dict
+
+
+class CreateVisualAssetRequest(BaseModel):
+    provider: str = Field(min_length=1, max_length=128)
+    resolution: str | None = Field(default=None, max_length=32)
+    override_prompt: str | None = Field(default=None, max_length=4000)
+
+
+class VisualAssetData(BaseModel):
+    asset_id: int
+    project_id: int
+    shot_id: int
+    asset_type: str
+    provider: str
+    resolution: str
+    file_path: str
+    prompt_used: str
+    seed: int | None
+    is_selected: bool
+
+
+class VisualAssetListData(BaseModel):
+    project_id: int
+    shot_id: int
+    items: list[VisualAssetData]

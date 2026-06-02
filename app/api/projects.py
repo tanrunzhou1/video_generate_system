@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.settings import get_settings
 from app.db.models import (
+    AssetType,
     CharacterProfile,
     FinalVideo,
     Project,
@@ -14,10 +15,13 @@ from app.db.models import (
     ProjectAssetType,
     ProjectStatus,
     RenderTask,
+    ShotPlan,
+    VisualAsset,
 )
 from app.db.session import get_db
 from app.workflow import graph as workflow_graph
 from app.services.task_log import create_task_with_log
+from app.services.visual_generate import generate_visual_asset
 from app.schemas.project import (
     ApiResponse,
     CharacterProfileCreatedData,
@@ -27,10 +31,13 @@ from app.schemas.project import (
     CreateCharacterProfileRequest,
     CreateTaskRequest,
     CreateProjectRequest,
+    CreateVisualAssetRequest,
     ParseScriptTriggeredData,
     ProjectStatusData,
     TaskCreatedData,
     UploadedAssetItem,
+    VisualAssetData,
+    VisualAssetListData,
 )
 
 router = APIRouter(prefix="/api/v1/projects", tags=["projects"])
@@ -65,6 +72,21 @@ def _build_final_video_summary(final_video: FinalVideo | None) -> dict | None:
         "created_at": final_video.created_at,
     }
 
+
+def _build_visual_asset_data(asset: VisualAsset) -> VisualAssetData:
+    return VisualAssetData(
+        asset_id=asset.id,
+        project_id=asset.project_id,
+        shot_id=asset.shot_id,
+        asset_type=asset.asset_type.value,
+        provider=asset.provider,
+        resolution=asset.resolution or settings.default_image_resolution,
+        file_path=asset.file_path,
+        prompt_used=asset.prompt_used,
+        seed=asset.seed,
+        is_selected=asset.is_selected,
+    )
+
 def _save_upload_file(project_id: int, asset_type: str, file: UploadFile) -> tuple[str, int]:
     base = Path(settings.storage_dir) / "projects" / str(project_id) / asset_type
     base.mkdir(parents=True, exist_ok=True)
@@ -96,6 +118,13 @@ def _require_project(db: Session, project_id: int) -> Project:
     if project is None:
         raise HTTPException(status_code=404, detail="project not found")
     return project
+
+
+def _require_shot(db: Session, project_id: int, shot_id: int) -> ShotPlan:
+    shot = db.get(ShotPlan, shot_id)
+    if shot is None or shot.project_id != project_id:
+        raise HTTPException(status_code=404, detail="shot not found")
+    return shot
 
 
 def _load_character_reference_assets(
@@ -343,6 +372,62 @@ def get_character_profile_detail(project_id: int, character_id: int, db: Session
         raise HTTPException(status_code=404, detail="character not found")
 
     data = _build_character_profile_detail(character)
+    return ApiResponse(data=data.model_dump())
+
+
+@router.post("/{project_id}/shots/{shot_id}/visual-assets", response_model=ApiResponse)
+def create_visual_asset(
+    project_id: int,
+    shot_id: int,
+    payload: CreateVisualAssetRequest,
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    _require_project(db, project_id)
+    _require_shot(db, project_id, shot_id)
+
+    try:
+        asset = generate_visual_asset(
+            db,
+            project_id=project_id,
+            shot_id=shot_id,
+            provider=payload.provider,
+            resolution=payload.resolution,
+            override_prompt=payload.override_prompt,
+        )
+    except ValueError as exc:
+        detail = str(exc)
+        if detail in {"project not found", "shot not found"}:
+            raise HTTPException(status_code=404, detail=detail) from exc
+        raise HTTPException(status_code=400, detail=detail) from exc
+
+    data = _build_visual_asset_data(asset)
+    return ApiResponse(data=data.model_dump())
+
+
+@router.get("/{project_id}/shots/{shot_id}/visual-assets", response_model=ApiResponse)
+def list_visual_assets(project_id: int, shot_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    _require_project(db, project_id)
+    _require_shot(db, project_id, shot_id)
+
+    items = (
+        db.execute(
+            select(VisualAsset)
+            .where(
+                VisualAsset.project_id == project_id,
+                VisualAsset.shot_id == shot_id,
+                VisualAsset.asset_type == AssetType.IMAGE,
+            )
+            .order_by(VisualAsset.id.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+    data = VisualAssetListData(
+        project_id=project_id,
+        shot_id=shot_id,
+        items=[_build_visual_asset_data(item) for item in items],
+    )
     return ApiResponse(data=data.model_dump())
 
 

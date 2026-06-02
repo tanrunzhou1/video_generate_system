@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "Video Generate System BE"
     app_env: str = "dev"
@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     qwen_api_key: str = ""
     qwen_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     qwen_model: str = "qwen-max"
+    qwen_image_model: str = "qwen-image-2.0"
+    qwen_image_api_url: str = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
+    default_image_resolution: str = "720p"
+    qwen_image_size: str = "2048*2048"
+    qwen_image_negative_prompt: str = (
+        "低清晰度，低质量，畸形肢体，多余手指，面部崩坏，构图混乱，模糊文字，明显AI伪影"
+    )
 
     ffmpeg_bin: str = "ffmpeg"
 

@@ -111,6 +111,7 @@ class VisualAsset(Base):
     asset_type: Mapped[AssetType] = mapped_column(SqlEnum(AssetType, name="asset_type"), nullable=False)
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)
     provider: Mapped[str] = mapped_column(String(128), nullable=False)
+    resolution: Mapped[str | None] = mapped_column(String(32))
     prompt_used: Mapped[str] = mapped_column(Text, nullable=False)
     seed: Mapped[int | None] = mapped_column(Integer)
     consistency_score: Mapped[float | None] = mapped_column(Float)
