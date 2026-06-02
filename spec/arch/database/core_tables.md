@@ -51,7 +51,8 @@
 ### render_task
 - 主键：`id`（int，自增）
 - 外键：`project_id -> project.id`
-- 字段：`stage`、`status`、`retry_count`、`error_code`、`error_message`、`started_at`、`finished_at`
+- 字段：`stage`、`status`、`retry_count`、`error_code`、`error_message`、`log_file_path`、`started_at`、`finished_at`
+- 说明：`render_task.id` 即任务 ID（task_id），MVP 阶段用于与本地日志文件建立一对一关联
 
 ### final_video
 - 主键：`id`（int，自增）

@@ -24,12 +24,12 @@
 - 已有 ORM 实体已记录 ✅
 
 3. Lite 模式可接受缺口
-- 项目生命周期 API 尚未实现（UC002 为 TODO）
-- Workflow 当前仅有 `parse_script` 骨架
-- 缺少显式 `project_asset` 表（待实现决策）
+- UC005/UC006 已补齐 Spec，但代码仍未落地
+- Workflow 当前仅有 `parse_script` 骨架实现，未接入真实 LLM
+- 任务日志关联能力已完成 MVP，实现了任务 ID、日志路径和本地日志写盘
 
 ## 下一步建议
 
-1. 优先实现 `POST /api/v1/projects` 与 `GET /api/v1/projects/{id}/status`。
-2. 增加上传元数据表与 multipart 上传接口。
-3. 接口落地后同步扩展 usecase 文档。
+1. 将 `parse_script` 从骨架升级为真实结构化解析节点。
+2. 让工作流真实调用任务日志服务，补齐 `running/succeeded/failed` 状态流转。
+3. 视需要新增 `GET /api/v1/tasks/{task_id}/logs` 日志读取接口。

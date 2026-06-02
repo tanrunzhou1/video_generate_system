@@ -16,3 +16,6 @@ wheels/
 
 # idea
 .idea
+
+/storage
+/logs

@@ -33,6 +33,7 @@
 - `ASSETS_DIR`（默认：`./assets`）
 - `STORAGE_DIR`（默认：`./storage`）
 - `LOGS_DIR`（默认：`./logs`）
+- `LOGS_DIR/tasks/`：任务日志目录，MVP 建议按 `project_{project_id}/task_{task_id}.log` 分层存放
 
 ### 工作流默认参数
 
@@ -54,5 +55,6 @@
   - `APP_ENV`、`STORAGE_DIR`：用于 `/health` 返回
   - `DATABASE_URL`：用于 Alembic 迁移连接
 - TODO：
+  - 将 `LOGS_DIR` 与 `render_task.log_file_path` 打通，用于任务日志定位
   - 将工作流超时/重试/Top-K 配置接入执行节点
   - 将模型服务配置接入 LLM/TTS/视觉生成适配器

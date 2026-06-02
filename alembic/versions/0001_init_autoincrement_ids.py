@@ -147,6 +147,7 @@ def upgrade() -> None:
         sa.Column("retry_count", sa.Integer(), nullable=False),
         sa.Column("error_code", sa.String(length=128), nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
+        sa.Column("log_file_path", sa.String(length=512), nullable=True),
         sa.Column("started_at", sa.DateTime(), nullable=True),
         sa.Column("finished_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(["project_id"], ["project.id"]),

@@ -1,12 +1,13 @@
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.settings import get_settings
 from app.db.models import (
+    FinalVideo,
     Project,
     ProjectAsset,
     ProjectAssetType,
@@ -14,15 +15,47 @@ from app.db.models import (
     RenderTask,
 )
 from app.db.session import get_db
+from app.services.task_log import create_task_with_log
 from app.schemas.project import (
     ApiResponse,
+    CreateTaskRequest,
     CreateProjectRequest,
     ProjectStatusData,
+    TaskCreatedData,
     UploadedAssetItem,
 )
 
 router = APIRouter(prefix="/api/v1/projects", tags=["projects"])
 settings = get_settings()
+
+
+def _build_latest_task_summary(latest_task: RenderTask | None) -> dict | None:
+    if latest_task is None:
+        return None
+
+    return {
+        "task_id": latest_task.id,
+        "stage": latest_task.stage,
+        "status": latest_task.status.value,
+        "retry_count": latest_task.retry_count,
+        "error_code": latest_task.error_code,
+        "error_message": latest_task.error_message,
+        "log_file_path": getattr(latest_task, "log_file_path", None),
+    }
+
+
+def _build_final_video_summary(final_video: FinalVideo | None) -> dict | None:
+    if final_video is None:
+        return None
+
+    return {
+        "video_id": final_video.id,
+        "resolution": final_video.resolution,
+        "duration_sec": final_video.duration_sec,
+        "file_path": final_video.file_path,
+        "cover_image_path": final_video.cover_image_path,
+        "created_at": final_video.created_at,
+    }
 
 def _save_upload_file(project_id: int, asset_type: str, file: UploadFile) -> tuple[str, int]:
     base = Path(settings.storage_dir) / "projects" / str(project_id) / asset_type
@@ -69,6 +102,30 @@ def create_project(payload: CreateProjectRequest, db: Session = Depends(get_db))
     )
 
 
+@router.post("/{project_id}/tasks", response_model=ApiResponse)
+def create_project_task(
+    project_id: int,
+    payload: CreateTaskRequest,
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    project = db.get(Project, project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="project not found")
+
+    task = create_task_with_log(db, project_id=project.id, stage=payload.stage.strip())
+    db.commit()
+    db.refresh(task)
+
+    data = TaskCreatedData(
+        task_id=task.id,
+        project_id=project.id,
+        stage=task.stage,
+        status=task.status.value,
+        log_file_path=task.log_file_path or "",
+    )
+    return ApiResponse(data=data.model_dump())
+
+
 @router.post("/{project_id}/assets", response_model=ApiResponse)
 def upload_project_assets(
     project_id: int,
@@ -103,6 +160,7 @@ def upload_project_assets(
             is_active=True,
         )
         db.add(asset)
+        db.flush()
         uploaded_items.append(
             UploadedAssetItem(asset_id=asset.id, asset_type=asset_type.value, file_path=file_path)
         )
@@ -138,3 +196,48 @@ def get_project_status(project_id: int, db: Session = Depends(get_db)) -> ApiRes
         updated_at=project.updated_at,
     )
     return ApiResponse(data=data.model_dump())
+
+
+@router.get("/{project_id}", response_model=ApiResponse)
+def get_project_detail(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    project = db.get(Project, project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="project not found")
+
+    assets = db.execute(
+        select(ProjectAsset).where(ProjectAsset.project_id == project.id, ProjectAsset.is_active.is_(True))
+    ).scalars().all()
+
+    asset_summary = {
+        "script_file_count": 0,
+        "persona_doc_count": 0,
+        "character_image_count": 0,
+        "style_reference_count": 0,
+    }
+    for asset in assets:
+        key = f"{asset.asset_type.value}_count"
+        if key in asset_summary:
+            asset_summary[key] += 1
+
+    latest_task = db.execute(
+        select(RenderTask).where(RenderTask.project_id == project.id).order_by(desc(RenderTask.started_at))
+    ).scalars().first()
+    final_video = db.execute(
+        select(FinalVideo).where(FinalVideo.project_id == project.id).order_by(desc(FinalVideo.created_at))
+    ).scalars().first()
+
+    return ApiResponse(
+        data={
+            "project_id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "target_duration_sec": project.target_duration_sec,
+            "style_preset": project.style_preset,
+            "status": project.status.value,
+            "created_at": project.created_at,
+            "updated_at": project.updated_at,
+            "asset_summary": asset_summary,
+            "latest_task": _build_latest_task_summary(latest_task),
+            "final_video": _build_final_video_summary(final_video),
+        }
+    )

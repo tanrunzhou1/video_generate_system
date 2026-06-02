@@ -45,7 +45,8 @@
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}`
 - 目标：返回项目详情与关联产物摘要。
-- 当前状态：TODO
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc005_query_project_detail.md`
 
 ## 内部工作流入口
 
@@ -55,7 +56,16 @@
 - 节点：`parse_script`
 - 代码位置：`app/workflow/graph.py`
 - 目标：将原始剧本转换为可用于分镜的数据结构。
-- 当前状态：骨架实现（`shots=[]`，`status=script_parsed`）
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc006_workflow_parse_script.md`
+
+### UC007 - 任务日志关联
+
+- 类型：内部任务生命周期能力 + 辅助 HTTP API
+- 关联对象：`render_task.id`、`render_task.log_file_path`
+- 目标：为每个任务生成稳定的任务 ID，并可通过任务记录定位本地日志文件。
+- 当前状态：IMPLEMENTED_MVP
+- 详细文档：`spec/usecase/uc007_task_log_linking.md`
 
 ## 说明
 

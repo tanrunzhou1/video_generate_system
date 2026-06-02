@@ -45,3 +45,15 @@ class ProjectStatusData(BaseModel):
     last_error_code: str | None
     last_error_message: str | None
     updated_at: datetime
+
+
+class CreateTaskRequest(BaseModel):
+    stage: str = Field(min_length=1, max_length=128)
+
+
+class TaskCreatedData(BaseModel):
+    task_id: int
+    project_id: int
+    stage: str
+    status: str
+    log_file_path: str

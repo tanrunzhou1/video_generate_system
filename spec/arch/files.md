@@ -35,9 +35,11 @@
 - 素材目录：`./assets`
 - 存储目录：`./storage`
 - 日志目录：`./logs`
+- 任务日志建议目录：`./logs/tasks/project_{project_id}/task_{task_id}.log`
 
 ## 5. 差距与待办
 
 - TODO：增加 `app/services`、`app/repositories` 分层以支持项目生命周期 API。
 - TODO：新增 `/api/v1/projects` 路由族。
+- TODO：为 `render_task` 建立日志文件路径写入与查询能力，打通任务 ID 与日志关联。
 - NEED_VERIFY：后续实体增多时，是否按领域拆分 `models.py`。
