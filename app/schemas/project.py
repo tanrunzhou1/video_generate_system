@@ -57,3 +57,15 @@ class TaskCreatedData(BaseModel):
     stage: str
     status: str
     log_file_path: str
+
+
+class TaskLogData(BaseModel):
+    task_id: int
+    project_id: int
+    stage: str
+    status: str
+    retry_count: int
+    error_code: str | None
+    error_message: str | None
+    log_file_path: str
+    log_content: str

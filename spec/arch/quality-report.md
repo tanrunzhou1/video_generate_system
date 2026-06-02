@@ -2,8 +2,8 @@
 
 ## 总览
 
-- 生成方式：`personal-code-to-spec-skill` Lite 流程
-- 日期：2026-05-29
+- 生成方式：`personal-spec-to-code-skill` Lite 流程
+- 日期：2026-06-02
 - 识别框架：FastAPI
 - 结论：PASS（Lite）
 
@@ -27,9 +27,10 @@
 - UC005 已实现，UC006 已完成 MVP 落地
 - `parse_script` 已接入 Qwen，并具备最小落库与日志能力
 - 任务日志关联能力已完成 MVP，实现了任务 ID、日志路径和本地日志写盘
+- UC008 已完成 MVP 落地，可按任务 ID 读取本地日志内容
 
 ## 下一步建议
 
 1. 视需要为 `parse_script` 增加独立 HTTP 触发入口。
 2. 增加 Qwen 调用超时、重试与更严格的结果修复策略。
-3. 新增 `GET /api/v1/tasks/{task_id}/logs` 日志读取接口。
+3. 为任务日志接口增加分页/截断能力，避免长日志一次性返回过大。
