@@ -48,6 +48,14 @@
 - 当前状态：已实现
 - 详细文档：`spec/usecase/uc005_query_project_detail.md`
 
+### UC014 - 分页查询项目列表
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects`
+- 目标：分页返回已创建项目列表，默认按创建时间倒序展示。
+- 当前状态：已实现
+- 详细文档：`spec/usecase/uc014_list_projects.md`
+
 ## 内部工作流入口
 
 ### UC006 - 工作流剧本解析

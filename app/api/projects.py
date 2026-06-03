@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy import desc, select
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy import desc, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -33,6 +33,8 @@ from app.schemas.project import (
     CreateProjectRequest,
     CreateVisualAssetRequest,
     ParseScriptTriggeredData,
+    ProjectListData,
+    ProjectListItem,
     ProjectStatusData,
     TaskCreatedData,
     UploadedAssetItem,
@@ -168,6 +170,47 @@ def _build_character_profile_detail(character: CharacterProfile) -> CharacterPro
         prompt_constraints=dict(character.prompt_constraints or {}),
         seed_policy=dict(character.seed_policy or {}),
     )
+
+
+@router.get("", response_model=ApiResponse)
+def list_projects(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    total = db.execute(select(func.count()).select_from(Project)).scalar_one()
+    offset = (page - 1) * page_size
+
+    items = (
+        db.execute(
+            select(Project)
+            .order_by(desc(Project.created_at), desc(Project.id))
+            .offset(offset)
+            .limit(page_size)
+        )
+        .scalars()
+        .all()
+    )
+
+    data = ProjectListData(
+        page=page,
+        page_size=page_size,
+        total=total,
+        items=[
+            ProjectListItem(
+                project_id=item.id,
+                name=item.name,
+                description=item.description,
+                target_duration_sec=item.target_duration_sec,
+                style_preset=item.style_preset,
+                status=item.status.value,
+                created_at=item.created_at,
+                updated_at=item.updated_at,
+            )
+            for item in items
+        ],
+    )
+    return ApiResponse(data=data.model_dump())
 
 
 @router.post("", response_model=ApiResponse)

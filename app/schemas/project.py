@@ -24,6 +24,24 @@ class ProjectCreatedData(BaseModel):
     created_at: datetime
 
 
+class ProjectListItem(BaseModel):
+    project_id: int
+    name: str
+    description: str | None
+    target_duration_sec: int
+    style_preset: str | None
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ProjectListData(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    items: list[ProjectListItem]
+
+
 class UploadedAssetItem(BaseModel):
     asset_id: int
     asset_type: str
