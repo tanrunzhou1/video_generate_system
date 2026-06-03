@@ -5,6 +5,7 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.datetime_utils import to_app_datetime
 from app.core.settings import get_settings
 from app.db.models import (
     AssetType,
@@ -71,7 +72,7 @@ def _build_final_video_summary(final_video: FinalVideo | None) -> dict | None:
         "duration_sec": final_video.duration_sec,
         "file_path": final_video.file_path,
         "cover_image_path": final_video.cover_image_path,
-        "created_at": final_video.created_at,
+        "created_at": to_app_datetime(final_video.created_at),
     }
 
 
@@ -204,8 +205,8 @@ def list_projects(
                 target_duration_sec=item.target_duration_sec,
                 style_preset=item.style_preset,
                 status=item.status.value,
-                created_at=item.created_at,
-                updated_at=item.updated_at,
+                created_at=to_app_datetime(item.created_at),
+                updated_at=to_app_datetime(item.updated_at),
             )
             for item in items
         ],
@@ -243,7 +244,7 @@ def create_project(payload: CreateProjectRequest, db: Session = Depends(get_db))
             "name": project.name,
             "status": project.status.value,
             "target_duration_sec": project.target_duration_sec,
-            "created_at": project.created_at,
+            "created_at": to_app_datetime(project.created_at),
         }
     )
 
@@ -373,7 +374,7 @@ def create_character_profile(
         name=character.name,
         voice_style=character.voice_style,
         reference_image_paths=list(character.reference_image_paths or []),
-        created_at=character.created_at,
+        created_at=to_app_datetime(character.created_at),
     )
     return ApiResponse(data=data.model_dump())
 
@@ -399,7 +400,7 @@ def list_character_profiles(project_id: int, db: Session = Depends(get_db)) -> A
                 name=item.name,
                 voice_style=item.voice_style,
                 reference_image_count=len(item.reference_image_paths or []),
-                created_at=item.created_at,
+                created_at=to_app_datetime(item.created_at),
             )
             for item in items
         ],
@@ -537,7 +538,7 @@ def get_project_status(project_id: int, db: Session = Depends(get_db)) -> ApiRes
         retry_count=latest_task.retry_count if latest_task else 0,
         last_error_code=latest_task.error_code if latest_task else None,
         last_error_message=latest_task.error_message if latest_task else None,
-        updated_at=project.updated_at,
+        updated_at=to_app_datetime(project.updated_at),
     )
     return ApiResponse(data=data.model_dump())
 
@@ -576,8 +577,8 @@ def get_project_detail(project_id: int, db: Session = Depends(get_db)) -> ApiRes
             "target_duration_sec": project.target_duration_sec,
             "style_preset": project.style_preset,
             "status": project.status.value,
-            "created_at": project.created_at,
-            "updated_at": project.updated_at,
+            "created_at": to_app_datetime(project.created_at),
+            "updated_at": to_app_datetime(project.updated_at),
             "asset_summary": asset_summary,
             "latest_task": _build_latest_task_summary(latest_task),
             "final_video": _build_final_video_summary(final_video),

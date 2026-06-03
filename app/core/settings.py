@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     app_name: str = "Video Generate System BE"
     app_env: str = "dev"
+    app_timezone: str = "Asia/Shanghai"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
     log_level: str = "INFO"

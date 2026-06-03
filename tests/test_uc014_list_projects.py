@@ -28,7 +28,7 @@ def _build_test_session():
 
 def test_list_projects_returns_paginated_items_in_created_at_desc_order():
     test_session = _build_test_session()
-    now = datetime.utcnow()
+    now = datetime(2026, 6, 3, 10, 0, 0)
 
     with test_session() as db:
         project_1 = Project(
@@ -82,6 +82,8 @@ def test_list_projects_returns_paginated_items_in_created_at_desc_order():
     assert len(payload["data"]["items"]) == 2
     assert payload["data"]["items"][0]["name"] == "project-latest"
     assert payload["data"]["items"][1]["name"] == "project-middle"
+    assert payload["data"]["items"][0]["created_at"] == "2026-06-03T18:00:00+08:00"
+    assert payload["data"]["items"][0]["updated_at"] == "2026-06-03T18:01:00+08:00"
 
 
 def test_list_projects_rejects_invalid_pagination_arguments():

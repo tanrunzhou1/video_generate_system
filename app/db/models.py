@@ -5,6 +5,7 @@ from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, Stri
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.datetime_utils import utc_now_naive
 from app.db.base import Base
 
 
@@ -54,9 +55,9 @@ class Project(Base):
         nullable=False,
         default=ProjectStatus.CREATED,
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, nullable=False, default=utc_now_naive, onupdate=utc_now_naive
     )
 
 
@@ -72,7 +73,7 @@ class CharacterProfile(Base):
     reference_image_paths: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     prompt_constraints: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     seed_policy: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive)
 
 
 class ScriptScene(Base):
@@ -183,7 +184,7 @@ class FinalVideo(Base):
     duration_sec: Mapped[float] = mapped_column(Float, nullable=False)
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)
     cover_image_path: Mapped[str | None] = mapped_column(String(512))
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive)
 
 
 class ProjectAsset(Base):
@@ -199,4 +200,4 @@ class ProjectAsset(Base):
     mime_type: Mapped[str] = mapped_column(String(128), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive)
