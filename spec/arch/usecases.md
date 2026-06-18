@@ -180,6 +180,30 @@
 - 当前状态：SPEC_READY
 - 详细文档：`spec/usecase/uc021_mix_shot_audio.md`
 
+### UC022 - 导出项目成片
+
+- 类型：HTTP POST
+- 路径：`/api/v1/projects/{project_id}/final-videos`
+- 目标：触发项目成片合成与导出任务。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc022_export_final_video.md`
+
+### UC023 - 查询项目成片列表
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/final-videos`
+- 目标：返回项目下已导出的成片列表。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc023_list_final_videos.md`
+
+### UC024 - 查询成片详情
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/final-videos/{video_id}`
+- 目标：返回单个成片的完整元数据。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc024_get_final_video_detail.md`
+
 ## 说明
 
 - PRD 已定义完整端到端能力，当前代码仍处于初始化阶段。
