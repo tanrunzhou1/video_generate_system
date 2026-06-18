@@ -124,6 +124,38 @@
 - 当前状态：已实现
 - 详细文档：`spec/usecase/uc013_list_visual_assets_by_shot.md`
 
+### UC015 - 生成镜头配音素材
+
+- 类型：HTTP POST
+- 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/voice-assets`
+- 目标：基于镜头台词与角色音色配置生成多角色配音音频。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc015_generate_voice_assets.md`
+
+### UC016 - 查询镜头配音素材列表
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/voice-assets`
+- 目标：按镜头返回已生成配音素材列表。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc016_list_voice_assets_by_shot.md`
+
+### UC017 - 生成镜头字幕片段
+
+- 类型：HTTP POST
+- 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/subtitle-segments`
+- 目标：基于镜头配音素材生成字幕时间轴片段。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc017_generate_subtitle_segments.md`
+
+### UC018 - 查询镜头字幕片段列表
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/subtitle-segments`
+- 目标：按镜头返回已生成字幕片段列表。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc018_list_subtitle_segments_by_shot.md`
+
 ## 说明
 
 - PRD 已定义完整端到端能力，当前代码仍处于初始化阶段。
