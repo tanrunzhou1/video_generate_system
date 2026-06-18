@@ -6,7 +6,7 @@
 - 类型：内部工作流节点
 - 节点名称：`parse_script`
 - 代码位置：`app/workflow/graph.py`
-- 目标：把项目中的原始剧本文本解析为结构化分镜输入，为后续 `scene`、`shot`、视觉生成与语音流程提供基础数据。
+- 目标：把项目中的原始剧本文本解析为结构化分镜输入，并将镜头台词正式落库，为后续 `scene`、`shot`、视觉生成、语音与字幕流程提供基础数据。
 
 ## 2. 输入定义
 
@@ -56,6 +56,7 @@ MVP 阶段目标输出：
 - 已返回结构化 `shots`
 - 已打通 `render_task` 任务日志链路
 - 已将解析结果落库到 `script_scene`、`shot_plan`
+- 本次增量 Spec 要求将镜头台词进一步落库到 `shot_dialogue`
 - 已提供辅助 HTTP 触发入口 `POST /api/v1/projects/{project_id}/parse-script`
 
 ## 4. 处理流程
@@ -68,14 +69,16 @@ MVP 阶段目标输出：
    - 角色与台词归属
    - 画面提示词生成
 4. 将结构化结果写回 `shots`
-5. 更新 `status = "script_parsed"`
+5. 将镜头台词拆分并写入 `shot_dialogue`
+6. 更新 `status = "script_parsed"`
 
 ## 5. 业务规则
 
 1. `script_text` 为空时，不应进入成功状态，应抛出错误或标记失败。
 2. 每个镜头至少应包含：`scene_index`、`shot_index`、`duration_sec`、`characters`、`visual_prompt`
 3. 解析结果应尽量与 PRD 要求的 `ShotPlan` 字段保持一致，便于后续落库。
-4. MVP 阶段允许先返回简化版 `shots` 结构，不强制一次覆盖全部字段。
+4. 每条镜头台词应落为独立 `shot_dialogue` 记录，至少包含角色名、台词文本、镜头内顺序。
+5. MVP 阶段允许先返回简化版 `shots` 结构，不强制一次覆盖全部字段。
 
 ## 6. 错误处理
 
@@ -95,6 +98,7 @@ MVP 阶段目标输出：
 1. 尚未增加对 Qwen 返回异常格式的更多修复策略
 2. 尚未把解析结果进一步转换为更完整的业务字段（如机位、情绪）
 3. 尚未增加失败重试与超时控制
+4. NEED_VERIFY：当 LLM 未明确返回说话人时，如何为 `shot_dialogue.character_name` 做兜底
 
 ## 9. 当前实现说明
 
@@ -103,6 +107,7 @@ MVP 阶段目标输出：
 3. 已把解析结果同步写入 `script_scene` 和 `shot_plan`
 4. 已通过工作流节点自动创建任务记录并写入日志
 5. 已支持通过项目维度的辅助接口读取已上传 `script_file` 并触发工作流解析
+6. 本次增量设计要求补充 `shot_dialogue` 落库，使 `UC015/UC017` 不再依赖前端重复输入台词
 
 ## 9.1 辅助接口定义
 

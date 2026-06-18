@@ -204,6 +204,14 @@
 - 当前状态：SPEC_READY
 - 详细文档：`spec/usecase/uc024_get_final_video_detail.md`
 
+### UC025 - 查询项目镜头列表
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/shots`
+- 目标：返回项目下全部镜头列表，作为视觉、语音、字幕、混音与导出的统一镜头入口。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc025_list_shots_by_project.md`
+
 ## 说明
 
 - PRD 已定义完整端到端能力，当前代码仍处于初始化阶段。

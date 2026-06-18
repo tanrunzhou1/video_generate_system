@@ -70,6 +70,8 @@
 - 输入表：
   - `voice_asset`
   - `bgm_asset`
+- 输出表：
+  - `audio_mix_asset`
 - 输出文件：
   - `storage/projects/{project_id}/audio_mix/shot_{shot_id}_mix.wav`
 
@@ -79,7 +81,8 @@
 2. `bgm_asset_id` 必须属于当前项目。
 3. 混音结果优先保证台词清晰，BGM 通过 `ducking_gain_db` 做压低。
 4. MVP 阶段采用镜头级混音，不做项目全局音频总线处理。
-5. 当前阶段混音结果先产出文件，不强制新增数据库表；NEED_VERIFY 后续是否新增 `audio_mix_asset`。
+5. 每次混音成功后新增 1 条 `audio_mix_asset` 记录，供 `UC022` 稳定消费。
+6. 同一镜头允许存在多个混音版本，MVP 默认取最新一条或 `is_selected=true` 的版本作为导出输入。
 
 ## 6. 与 PRD 对齐
 
@@ -133,5 +136,5 @@
 
 1. 增加项目级整片混音接口
 2. 增加自动按情绪选择 BGM 的策略接口
-3. 增加混音结果持久化表
-4. 增加峰值、电平等质量检查结果
+3. 增加峰值、电平等质量检查结果
+4. 增加混音结果质量评分与人工选中能力

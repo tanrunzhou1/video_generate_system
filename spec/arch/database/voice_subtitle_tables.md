@@ -6,6 +6,27 @@
 
 ## 1. voice_asset
 
+## 1. shot_dialogue
+
+- 主键：`id`（int，自增）
+- 外键：
+  - `project_id -> project.id`
+  - `shot_id -> shot_plan.id`
+
+字段说明：
+
+- `character_name`：说话角色名，来自剧本解析结果
+- `text`：台词文本
+- `sequence_no`：镜头内台词顺序
+
+当前使用约定：
+
+1. `shot_dialogue` 由 `UC006` 剧本解析阶段直接落库。
+2. 每条镜头台词对应 1 条 `shot_dialogue` 记录。
+3. `UC015` 从 `shot_dialogue` 读取台词并生成语音，不再要求前端重复输入台词。
+
+## 2. voice_asset
+
 - 主键：`id`（int，自增）
 - 外键：
   - `project_id -> project.id`
@@ -26,7 +47,7 @@
 2. `start_time_sec/end_time_sec` 作为字幕对齐的直接输入。
 3. `character_id` 用于回溯角色音色与角色身份。
 
-## 2. subtitle_segment
+## 3. subtitle_segment
 
 - 主键：`id`（int，自增）
 - 外键：
@@ -45,7 +66,7 @@
 2. 每条 `voice_asset` 默认映射为 1 条 `subtitle_segment`。
 3. 当前只存结构化片段，不单独持久化 `.srt` 文件路径。
 
-## 3. NEED_VERIFY
+## 4. NEED_VERIFY
 
 1. 若后续要支持项目级 `.srt` 文件导出，是否新增 `subtitle_file` 或 `final_video` 关联字段。
 2. 若后续要支持句内断句字幕，是否需要在 `subtitle_segment` 中增加 `sequence_no` 或 `speaker_name`。

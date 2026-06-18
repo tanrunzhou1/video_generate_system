@@ -83,6 +83,7 @@
 3. 生成前可先清理当前镜头旧字幕，避免重复片段；具体覆盖策略 NEED_VERIFY。
 4. 当前阶段只保证镜头级字幕结构正确，项目级 `.srt` 文件导出放在后续迭代。
 5. 时间轴精度以 `voice_asset` 结果为准，目标偏差满足 PRD 中 `<300ms` 的可接受范围。
+6. 闭环上游依赖 `shot_dialogue -> voice_asset -> subtitle_segment`，不再要求前端手工录入台词。
 
 ## 6. 与 PRD 对齐
 

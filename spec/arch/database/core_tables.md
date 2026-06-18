@@ -28,6 +28,11 @@
 - 外键：`project_id -> project.id`、`scene_id -> script_scene.id`
 - 字段：`shot_index`、`duration_sec`、`characters(JSON)`、`camera_instruction`、`visual_prompt`、`status`
 
+### shot_dialogue
+- 主键：`id`（int，自增）
+- 外键：`project_id -> project.id`、`shot_id -> shot_plan.id`
+- 字段：`character_name`、`text`、`sequence_no`
+
 ### visual_asset
 - 主键：`id`（int，自增）
 - 外键：`project_id -> project.id`、`shot_id -> shot_plan.id`
@@ -47,6 +52,11 @@
 - 主键：`id`（int，自增）
 - 外键：`project_id -> project.id`
 - 字段：`file_path`、`mood_tag`、`start_time_sec`、`end_time_sec`、`gain_db`
+
+### audio_mix_asset
+- 主键：`id`（int，自增）
+- 外键：`project_id -> project.id`、`shot_id -> shot_plan.id`、`bgm_asset_id -> bgm_asset.id`
+- 字段：`mixed_audio_path`、`ducking_gain_db`、`fade_in_sec`、`fade_out_sec`、`is_selected`、`created_at`
 
 ### render_task
 - 主键：`id`（int，自增）

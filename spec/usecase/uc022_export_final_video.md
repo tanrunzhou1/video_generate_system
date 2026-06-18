@@ -64,9 +64,8 @@
 
 - 输入数据来源：
   - `visual_asset`
-  - `voice_asset`
+  - `audio_mix_asset`
   - `subtitle_segment`
-  - NEED_VERIFY：镜头混音结果当前为文件落盘，不在数据库中单独建表
 - 过程任务：
   - `render_task.stage = "final_video_export"`
 - 输出表：
@@ -77,10 +76,11 @@
 ## 5. 业务规则
 
 1. 导出前必须保证项目至少存在可用的镜头视觉素材。
-2. 若项目要求带音频，必须存在对应镜头混音结果；MVP 阶段默认要求音频链路已准备完成。
+2. 若项目要求带音频，必须存在对应镜头已选中或最新的 `audio_mix_asset` 结果；MVP 阶段默认要求音频链路已准备完成。
 3. `include_subtitles=true` 时，系统从 `subtitle_segment` 叠加字幕。
 4. `transition_mode` 在 MVP 阶段只支持 `none`，后续再扩展淡入淡出、交叉溶解等。
 5. 当前接口以“触发导出任务”为主，成片文件生成后通过查询接口查看结果。
+6. 对每个镜头，导出时应优先使用 `is_selected=true` 的视觉素材与混音素材；若不存在，则回退到最新一条记录。
 
 ## 6. 与 PRD 对齐
 
