@@ -156,6 +156,30 @@
 - 当前状态：SPEC_READY
 - 详细文档：`spec/usecase/uc018_list_subtitle_segments_by_shot.md`
 
+### UC019 - 创建背景音乐素材
+
+- 类型：HTTP POST
+- 路径：`/api/v1/projects/{project_id}/bgm-assets`
+- 目标：登记项目背景音乐素材，供后续镜头混音选择使用。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc019_create_bgm_asset.md`
+
+### UC020 - 查询项目背景音乐素材列表
+
+- 类型：HTTP GET
+- 路径：`/api/v1/projects/{project_id}/bgm-assets`
+- 目标：返回项目下已登记的背景音乐素材列表。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc020_list_bgm_assets.md`
+
+### UC021 - 生成镜头混音结果
+
+- 类型：HTTP POST
+- 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/audio-mix`
+- 目标：基于镜头配音与背景音乐生成镜头级混音结果。
+- 当前状态：SPEC_READY
+- 详细文档：`spec/usecase/uc021_mix_shot_audio.md`
+
 ## 说明
 
 - PRD 已定义完整端到端能力，当前代码仍处于初始化阶段。
