@@ -1,5 +1,6 @@
 from app.db.base import Base
 from app.db.models import (
+    AudioMixAsset,
     BgmAsset,
     CharacterProfile,
     FinalVideo,
@@ -7,6 +8,7 @@ from app.db.models import (
     Project,
     RenderTask,
     ScriptScene,
+    ShotDialogue,
     ShotPlan,
     SubtitleSegment,
     VisualAsset,
@@ -18,11 +20,13 @@ __all__ = [
     "Project",
     "CharacterProfile",
     "ScriptScene",
+    "ShotDialogue",
     "ShotPlan",
     "VisualAsset",
     "VoiceAsset",
     "SubtitleSegment",
     "BgmAsset",
+    "AudioMixAsset",
     "RenderTask",
     "FinalVideo",
     "ProjectAsset",

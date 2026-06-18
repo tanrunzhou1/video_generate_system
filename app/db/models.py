@@ -103,6 +103,17 @@ class ShotPlan(Base):
     )
 
 
+class ShotDialogue(Base):
+    __tablename__ = "shot_dialogue"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    shot_id: Mapped[int] = mapped_column(ForeignKey("shot_plan.id"), nullable=False, index=True)
+    character_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    sequence_no: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
 class VisualAsset(Base):
     __tablename__ = "visual_asset"
 
@@ -154,6 +165,21 @@ class BgmAsset(Base):
     start_time_sec: Mapped[float] = mapped_column(Float, nullable=False)
     end_time_sec: Mapped[float] = mapped_column(Float, nullable=False)
     gain_db: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+
+
+class AudioMixAsset(Base):
+    __tablename__ = "audio_mix_asset"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"), nullable=False, index=True)
+    shot_id: Mapped[int] = mapped_column(ForeignKey("shot_plan.id"), nullable=False, index=True)
+    bgm_asset_id: Mapped[int] = mapped_column(ForeignKey("bgm_asset.id"), nullable=False, index=True)
+    mixed_audio_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    ducking_gain_db: Mapped[float] = mapped_column(Float, nullable=False)
+    fade_in_sec: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    fade_out_sec: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    is_selected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive)
 
 
 class RenderTask(Base):

@@ -9,6 +9,8 @@ from app.core.datetime_utils import to_app_datetime
 from app.core.settings import get_settings
 from app.db.models import (
     AssetType,
+    AudioMixAsset,
+    BgmAsset,
     CharacterProfile,
     FinalVideo,
     Project,
@@ -17,30 +19,60 @@ from app.db.models import (
     ProjectStatus,
     RenderTask,
     ShotPlan,
+    ScriptScene,
+    ShotDialogue,
+    SubtitleSegment,
     VisualAsset,
+    VoiceAsset,
 )
 from app.db.session import get_db
+from app.services.audio_mix import create_audio_mix_for_shot, list_bgm_assets, register_bgm_asset
+from app.services.final_video import export_final_video, list_final_videos
+from app.services.voice_subtitle import (
+    generate_subtitle_segments_for_shot,
+    generate_voice_assets_for_shot,
+    list_subtitle_segments_for_shot,
+    list_voice_assets_for_shot,
+)
 from app.workflow import graph as workflow_graph
 from app.services.task_log import create_task_with_log
 from app.services.visual_generate import generate_visual_asset
 from app.schemas.project import (
     ApiResponse,
+    AudioMixData,
+    BgmAssetItem,
+    BgmAssetListData,
     CharacterProfileCreatedData,
     CharacterProfileDetailData,
     CharacterProfileListData,
     CharacterProfileListItem,
+    CreateAudioMixRequest,
+    CreateBgmAssetRequest,
     CreateCharacterProfileRequest,
-    CreateTaskRequest,
+    CreateFinalVideoRequest,
     CreateProjectRequest,
+    CreateSubtitleSegmentsRequest,
+    CreateTaskRequest,
     CreateVisualAssetRequest,
+    CreateVoiceAssetsRequest,
+    FinalVideoDetailData,
+    FinalVideoExportData,
+    FinalVideoItem,
+    FinalVideoListData,
     ParseScriptTriggeredData,
     ProjectListData,
     ProjectListItem,
     ProjectStatusData,
+    ShotListData,
+    ShotListItem,
+    SubtitleSegmentItem,
+    SubtitleSegmentListData,
     TaskCreatedData,
     UploadedAssetItem,
     VisualAssetData,
     VisualAssetListData,
+    VoiceAssetItem,
+    VoiceAssetListData,
 )
 
 router = APIRouter(prefix="/api/v1/projects", tags=["projects"])
@@ -89,6 +121,67 @@ def _build_visual_asset_data(asset: VisualAsset) -> VisualAssetData:
         seed=asset.seed,
         is_selected=asset.is_selected,
     )
+
+
+def _build_voice_asset_item(asset: VoiceAsset) -> VoiceAssetItem:
+    return VoiceAssetItem(
+        voice_asset_id=asset.id,
+        character_id=asset.character_id,
+        dialogue_id=getattr(asset, "dialogue_id", 0),
+        line_text=asset.line_text,
+        voice_provider=asset.voice_provider,
+        audio_path=asset.audio_path,
+        start_time_sec=asset.start_time_sec,
+        end_time_sec=asset.end_time_sec,
+    )
+
+
+def _build_subtitle_segment_item(segment: SubtitleSegment) -> SubtitleSegmentItem:
+    return SubtitleSegmentItem(
+        subtitle_segment_id=segment.id,
+        text=segment.text,
+        start_time_sec=segment.start_time_sec,
+        end_time_sec=segment.end_time_sec,
+    )
+
+
+def _build_bgm_asset_item(asset: BgmAsset) -> BgmAssetItem:
+    return BgmAssetItem(
+        bgm_asset_id=asset.id,
+        file_path=asset.file_path,
+        mood_tag=asset.mood_tag,
+        start_time_sec=asset.start_time_sec,
+        end_time_sec=asset.end_time_sec,
+        gain_db=asset.gain_db,
+    )
+
+
+def _build_audio_mix_data(asset: AudioMixAsset, voice_assets: list[VoiceAsset]) -> AudioMixData:
+    return AudioMixData(
+        audio_mix_asset_id=asset.id,
+        project_id=asset.project_id,
+        shot_id=asset.shot_id,
+        bgm_asset_id=asset.bgm_asset_id,
+        voice_asset_ids=[item.id for item in voice_assets],
+        mixed_audio_path=asset.mixed_audio_path,
+        ducking_gain_db=asset.ducking_gain_db,
+        fade_in_sec=asset.fade_in_sec,
+        fade_out_sec=asset.fade_out_sec,
+        is_selected=asset.is_selected,
+        created_at=to_app_datetime(asset.created_at),
+    )
+
+
+def _build_final_video_item(video: FinalVideo) -> FinalVideoItem:
+    return FinalVideoItem(
+        video_id=video.id,
+        resolution=video.resolution,
+        duration_sec=video.duration_sec,
+        file_path=video.file_path,
+        cover_image_path=video.cover_image_path,
+        created_at=to_app_datetime(video.created_at),
+    )
+
 
 def _save_upload_file(project_id: int, asset_type: str, file: UploadFile) -> tuple[str, int]:
     base = Path(settings.storage_dir) / "projects" / str(project_id) / asset_type
@@ -419,6 +512,85 @@ def get_character_profile_detail(project_id: int, character_id: int, db: Session
     return ApiResponse(data=data.model_dump())
 
 
+@router.get("/{project_id}/shots", response_model=ApiResponse)
+def list_project_shots(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    _require_project(db, project_id)
+
+    scene_index_map = {
+        scene.id: scene.scene_index
+        for scene in db.execute(select(ScriptScene).where(ScriptScene.project_id == project_id)).scalars()
+    }
+    dialogue_counts = {
+        shot_id: count
+        for shot_id, count in db.execute(
+            select(ShotDialogue.shot_id, func.count(ShotDialogue.id))
+            .where(ShotDialogue.project_id == project_id)
+            .group_by(ShotDialogue.shot_id)
+        ).all()
+    }
+    shots = (
+        db.execute(
+            select(ShotPlan)
+            .where(ShotPlan.project_id == project_id)
+            .order_by(ShotPlan.scene_id.asc(), ShotPlan.shot_index.asc(), ShotPlan.id.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+    data = ShotListData(
+        project_id=project_id,
+        items=[
+            ShotListItem(
+                shot_id=item.id,
+                scene_id=item.scene_id,
+                scene_index=scene_index_map.get(item.scene_id, 0),
+                shot_index=item.shot_index,
+                duration_sec=item.duration_sec,
+                characters=list(item.characters or []),
+                camera_instruction=item.camera_instruction,
+                visual_prompt=item.visual_prompt,
+                status=item.status.value,
+                dialogue_count=dialogue_counts.get(item.id, 0),
+            )
+            for item in shots
+        ],
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.post("/{project_id}/bgm-assets", response_model=ApiResponse)
+def create_bgm_asset(
+    project_id: int,
+    payload: CreateBgmAssetRequest,
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    _require_project(db, project_id)
+
+    try:
+        asset = register_bgm_asset(
+            db,
+            project_id=project_id,
+            file_path=payload.file_path,
+            mood_tag=payload.mood_tag,
+            start_time_sec=payload.start_time_sec,
+            end_time_sec=payload.end_time_sec,
+            gain_db=payload.gain_db,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return ApiResponse(data=_build_bgm_asset_item(asset).model_dump())
+
+
+@router.get("/{project_id}/bgm-assets", response_model=ApiResponse)
+def get_bgm_assets(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    _require_project(db, project_id)
+    items = list_bgm_assets(db, project_id)
+    data = BgmAssetListData(project_id=project_id, items=[_build_bgm_asset_item(item) for item in items])
+    return ApiResponse(data=data.model_dump())
+
+
 @router.post("/{project_id}/shots/{shot_id}/visual-assets", response_model=ApiResponse)
 def create_visual_asset(
     project_id: int,
@@ -471,6 +643,187 @@ def list_visual_assets(project_id: int, shot_id: int, db: Session = Depends(get_
         project_id=project_id,
         shot_id=shot_id,
         items=[_build_visual_asset_data(item) for item in items],
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.post("/{project_id}/shots/{shot_id}/voice-assets", response_model=ApiResponse)
+def create_voice_assets(
+    project_id: int,
+    shot_id: int,
+    payload: CreateVoiceAssetsRequest,
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    _require_project(db, project_id)
+    _require_shot(db, project_id, shot_id)
+
+    try:
+        items = generate_voice_assets_for_shot(
+            db,
+            project_id=project_id,
+            shot_id=shot_id,
+            provider=payload.provider,
+            source=payload.source,
+        )
+    except ValueError as exc:
+        detail = str(exc)
+        status_code = 404 if detail in {"shot not found"} else 400
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+
+    data = VoiceAssetListData(
+        project_id=project_id,
+        shot_id=shot_id,
+        provider=payload.provider,
+        source=payload.source,
+        items=[_build_voice_asset_item(item) for item in items],
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.get("/{project_id}/shots/{shot_id}/voice-assets", response_model=ApiResponse)
+def list_voice_assets(project_id: int, shot_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    _require_project(db, project_id)
+    _require_shot(db, project_id, shot_id)
+    items = list_voice_assets_for_shot(db, project_id, shot_id)
+    data = VoiceAssetListData(
+        project_id=project_id,
+        shot_id=shot_id,
+        items=[_build_voice_asset_item(item) for item in items],
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.post("/{project_id}/shots/{shot_id}/subtitle-segments", response_model=ApiResponse)
+def create_subtitle_segments(
+    project_id: int,
+    shot_id: int,
+    payload: CreateSubtitleSegmentsRequest,
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    _require_project(db, project_id)
+    _require_shot(db, project_id, shot_id)
+
+    try:
+        items = generate_subtitle_segments_for_shot(
+            db,
+            project_id=project_id,
+            shot_id=shot_id,
+            source=payload.source,
+        )
+    except ValueError as exc:
+        detail = str(exc)
+        status_code = 404 if detail in {"shot not found"} else 400
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+
+    data = SubtitleSegmentListData(
+        project_id=project_id,
+        shot_id=shot_id,
+        source=payload.source,
+        items=[_build_subtitle_segment_item(item) for item in items],
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.get("/{project_id}/shots/{shot_id}/subtitle-segments", response_model=ApiResponse)
+def list_subtitle_segments(project_id: int, shot_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    _require_project(db, project_id)
+    _require_shot(db, project_id, shot_id)
+    items = list_subtitle_segments_for_shot(db, project_id, shot_id)
+    data = SubtitleSegmentListData(
+        project_id=project_id,
+        shot_id=shot_id,
+        items=[_build_subtitle_segment_item(item) for item in items],
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.post("/{project_id}/shots/{shot_id}/audio-mix", response_model=ApiResponse)
+def create_audio_mix(
+    project_id: int,
+    shot_id: int,
+    payload: CreateAudioMixRequest,
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    _require_project(db, project_id)
+    _require_shot(db, project_id, shot_id)
+
+    try:
+        mix_asset, voice_assets = create_audio_mix_for_shot(
+            db,
+            project_id=project_id,
+            shot_id=shot_id,
+            bgm_asset_id=payload.bgm_asset_id,
+            ducking_gain_db=payload.ducking_gain_db,
+            fade_in_sec=payload.fade_in_sec,
+            fade_out_sec=payload.fade_out_sec,
+        )
+    except ValueError as exc:
+        detail = str(exc)
+        status_code = 404 if detail in {"shot not found", "bgm asset not found"} else 400
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+
+    return ApiResponse(data=_build_audio_mix_data(mix_asset, voice_assets).model_dump())
+
+
+@router.post("/{project_id}/final-videos", response_model=ApiResponse)
+def create_final_video(
+    project_id: int,
+    payload: CreateFinalVideoRequest,
+    db: Session = Depends(get_db),
+) -> ApiResponse:
+    _require_project(db, project_id)
+
+    try:
+        task, video = export_final_video(
+            db,
+            project_id=project_id,
+            resolution=payload.resolution,
+            include_subtitles=payload.include_subtitles,
+            transition_mode=payload.transition_mode,
+        )
+    except ValueError as exc:
+        detail = str(exc)
+        status_code = 404 if detail == "project not found" else 400
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+
+    data = FinalVideoExportData(
+        project_id=project_id,
+        task_id=task.id,
+        status=task.status.value,
+        resolution=payload.resolution,
+        include_subtitles=payload.include_subtitles,
+        transition_mode=payload.transition_mode,
+        log_file_path=task.log_file_path or "",
+        video_id=video.id,
+        file_path=video.file_path,
+    )
+    return ApiResponse(data=data.model_dump())
+
+
+@router.get("/{project_id}/final-videos", response_model=ApiResponse)
+def get_final_video_list(project_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    _require_project(db, project_id)
+    items = list_final_videos(db, project_id)
+    data = FinalVideoListData(project_id=project_id, items=[_build_final_video_item(item) for item in items])
+    return ApiResponse(data=data.model_dump())
+
+
+@router.get("/{project_id}/final-videos/{video_id}", response_model=ApiResponse)
+def get_final_video_detail(project_id: int, video_id: int, db: Session = Depends(get_db)) -> ApiResponse:
+    _require_project(db, project_id)
+    video = db.get(FinalVideo, video_id)
+    if video is None or video.project_id != project_id:
+        raise HTTPException(status_code=404, detail="final video not found")
+
+    item = _build_final_video_item(video)
+    data = FinalVideoDetailData(
+        video_id=item.video_id,
+        project_id=project_id,
+        resolution=item.resolution,
+        duration_sec=item.duration_sec,
+        file_path=item.file_path,
+        cover_image_path=item.cover_image_path,
+        created_at=item.created_at,
     )
     return ApiResponse(data=data.model_dump())
 

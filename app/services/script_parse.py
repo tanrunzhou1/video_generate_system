@@ -7,7 +7,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.settings import get_settings
-from app.db.models import Project, ProjectStatus, ScriptScene, ShotPlan
+from app.db.models import Project, ProjectStatus, ScriptScene, ShotDialogue, ShotPlan
 from app.services.task_log import mark_task_failed, mark_task_running, mark_task_succeeded
 
 settings = get_settings()
@@ -77,6 +77,8 @@ def generate_shot_drafts(script_text: str) -> list[ShotDraft]:
 
 
 def _upsert_script_breakdown(db: Session, project_id: int, shots: Iterable[ShotDraft]) -> None:
+    shots = list(shots)
+    db.execute(delete(ShotDialogue).where(ShotDialogue.project_id == project_id))
     db.execute(delete(ShotPlan).where(ShotPlan.project_id == project_id))
     db.execute(delete(ScriptScene).where(ScriptScene.project_id == project_id))
 
@@ -97,17 +99,29 @@ def _upsert_script_breakdown(db: Session, project_id: int, shots: Iterable[ShotD
         else:
             scene.estimated_duration_sec += max(int(round(shot.duration_sec)), 1)
 
-        db.add(
-            ShotPlan(
-                project_id=project_id,
-                scene_id=scene.id,
-                shot_index=shot.shot_index,
-                duration_sec=shot.duration_sec,
-                characters=shot.characters,
-                camera_instruction=None,
-                visual_prompt=shot.visual_prompt,
-            )
+        shot_record = ShotPlan(
+            project_id=project_id,
+            scene_id=scene.id,
+            shot_index=shot.shot_index,
+            duration_sec=shot.duration_sec,
+            characters=shot.characters,
+            camera_instruction=None,
+            visual_prompt=shot.visual_prompt,
         )
+        db.add(shot_record)
+        db.flush()
+
+        if shot.dialogue and shot.dialogue.strip():
+            character_name = shot.characters[0] if shot.characters else "旁白"
+            db.add(
+                ShotDialogue(
+                    project_id=project_id,
+                    shot_id=shot_record.id,
+                    character_name=character_name,
+                    text=shot.dialogue.strip(),
+                    sequence_no=1,
+                )
+            )
 
 
 def run_script_parse(db: Session, project_id: int, script_text: str, task) -> list[dict]:

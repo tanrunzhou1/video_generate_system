@@ -129,7 +129,7 @@
 - 类型：HTTP POST
 - 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/voice-assets`
 - 目标：基于镜头台词与角色音色配置生成多角色配音音频。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc015_generate_voice_assets.md`
 
 ### UC016 - 查询镜头配音素材列表
@@ -137,7 +137,7 @@
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/voice-assets`
 - 目标：按镜头返回已生成配音素材列表。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc016_list_voice_assets_by_shot.md`
 
 ### UC017 - 生成镜头字幕片段
@@ -145,7 +145,7 @@
 - 类型：HTTP POST
 - 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/subtitle-segments`
 - 目标：基于镜头配音素材生成字幕时间轴片段。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc017_generate_subtitle_segments.md`
 
 ### UC018 - 查询镜头字幕片段列表
@@ -153,7 +153,7 @@
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/subtitle-segments`
 - 目标：按镜头返回已生成字幕片段列表。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc018_list_subtitle_segments_by_shot.md`
 
 ### UC019 - 创建背景音乐素材
@@ -161,7 +161,7 @@
 - 类型：HTTP POST
 - 路径：`/api/v1/projects/{project_id}/bgm-assets`
 - 目标：登记项目背景音乐素材，供后续镜头混音选择使用。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc019_create_bgm_asset.md`
 
 ### UC020 - 查询项目背景音乐素材列表
@@ -169,7 +169,7 @@
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}/bgm-assets`
 - 目标：返回项目下已登记的背景音乐素材列表。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc020_list_bgm_assets.md`
 
 ### UC021 - 生成镜头混音结果
@@ -177,7 +177,7 @@
 - 类型：HTTP POST
 - 路径：`/api/v1/projects/{project_id}/shots/{shot_id}/audio-mix`
 - 目标：基于镜头配音与背景音乐生成镜头级混音结果。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc021_mix_shot_audio.md`
 
 ### UC022 - 导出项目成片
@@ -185,7 +185,7 @@
 - 类型：HTTP POST
 - 路径：`/api/v1/projects/{project_id}/final-videos`
 - 目标：触发项目成片合成与导出任务。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc022_export_final_video.md`
 
 ### UC023 - 查询项目成片列表
@@ -193,7 +193,7 @@
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}/final-videos`
 - 目标：返回项目下已导出的成片列表。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc023_list_final_videos.md`
 
 ### UC024 - 查询成片详情
@@ -201,7 +201,7 @@
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}/final-videos/{video_id}`
 - 目标：返回单个成片的完整元数据。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc024_get_final_video_detail.md`
 
 ### UC025 - 查询项目镜头列表
@@ -209,7 +209,7 @@
 - 类型：HTTP GET
 - 路径：`/api/v1/projects/{project_id}/shots`
 - 目标：返回项目下全部镜头列表，作为视觉、语音、字幕、混音与导出的统一镜头入口。
-- 当前状态：SPEC_READY
+- 当前状态：已实现
 - 详细文档：`spec/usecase/uc025_list_shots_by_project.md`
 
 ## 说明

@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.db.base import Base
-from app.db.models import Project, ProjectStatus, RenderTask, ScriptScene, ShotPlan
+from app.db.models import Project, ProjectStatus, RenderTask, ScriptScene, ShotDialogue, ShotPlan
 from app.workflow import graph as workflow_graph
 
 
@@ -67,6 +67,7 @@ def test_parse_script_success(monkeypatch, tmp_path):
     with test_session() as db:
         assert db.query(ScriptScene).filter(ScriptScene.project_id == project_id).count() == 1
         assert db.query(ShotPlan).filter(ShotPlan.project_id == project_id).count() == 2
+        assert db.query(ShotDialogue).filter(ShotDialogue.project_id == project_id).count() == 2
         task = db.query(RenderTask).filter(RenderTask.project_id == project_id).one()
         assert task.status.value == "succeeded"
         assert task.log_file_path is not None

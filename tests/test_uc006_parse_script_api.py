@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.db.base import Base
-from app.db.models import Project, ProjectAsset, ProjectAssetType, ProjectStatus, RenderTask, ScriptScene, ShotPlan
+from app.db.models import Project, ProjectAsset, ProjectAssetType, ProjectStatus, RenderTask, ScriptScene, ShotDialogue, ShotPlan
 from app.db.session import get_db
 from app.main import app
 from app.workflow import graph as workflow_graph
@@ -95,6 +95,7 @@ def test_trigger_parse_script_success(monkeypatch, tmp_path):
         assert db.query(RenderTask).filter(RenderTask.project_id == project_id).count() == 1
         assert db.query(ScriptScene).filter(ScriptScene.project_id == project_id).count() == 1
         assert db.query(ShotPlan).filter(ShotPlan.project_id == project_id).count() == 2
+        assert db.query(ShotDialogue).filter(ShotDialogue.project_id == project_id).count() == 2
 
 
 def test_trigger_parse_script_returns_400_without_script_asset(monkeypatch):

@@ -163,3 +163,148 @@ class VisualAssetListData(BaseModel):
     project_id: int
     shot_id: int
     items: list[VisualAssetData]
+
+
+class ShotListItem(BaseModel):
+    shot_id: int
+    scene_id: int
+    scene_index: int
+    shot_index: int
+    duration_sec: float
+    characters: list[str]
+    camera_instruction: str | None
+    visual_prompt: str
+    status: str
+    dialogue_count: int
+
+
+class ShotListData(BaseModel):
+    project_id: int
+    items: list[ShotListItem]
+
+
+class CreateVoiceAssetsRequest(BaseModel):
+    provider: str = Field(min_length=1, max_length=128)
+    source: str = Field(min_length=1, max_length=64)
+
+
+class VoiceAssetItem(BaseModel):
+    voice_asset_id: int
+    character_id: int
+    dialogue_id: int
+    line_text: str
+    voice_provider: str
+    audio_path: str
+    start_time_sec: float
+    end_time_sec: float
+
+
+class VoiceAssetListData(BaseModel):
+    project_id: int
+    shot_id: int
+    provider: str | None = None
+    source: str | None = None
+    items: list[VoiceAssetItem]
+
+
+class CreateSubtitleSegmentsRequest(BaseModel):
+    source: str = Field(min_length=1, max_length=64)
+
+
+class SubtitleSegmentItem(BaseModel):
+    subtitle_segment_id: int
+    text: str
+    start_time_sec: float
+    end_time_sec: float
+
+
+class SubtitleSegmentListData(BaseModel):
+    project_id: int
+    shot_id: int
+    source: str | None = None
+    items: list[SubtitleSegmentItem]
+
+
+class CreateBgmAssetRequest(BaseModel):
+    file_path: str = Field(min_length=1, max_length=512)
+    mood_tag: str | None = Field(default=None, max_length=64)
+    start_time_sec: float = Field(ge=0)
+    end_time_sec: float = Field(gt=0)
+    gain_db: float = 0.0
+
+
+class BgmAssetItem(BaseModel):
+    bgm_asset_id: int
+    file_path: str
+    mood_tag: str | None
+    start_time_sec: float
+    end_time_sec: float
+    gain_db: float
+
+
+class BgmAssetListData(BaseModel):
+    project_id: int
+    items: list[BgmAssetItem]
+
+
+class CreateAudioMixRequest(BaseModel):
+    bgm_asset_id: int
+    ducking_gain_db: float = 0.0
+    fade_in_sec: float = Field(default=0.0, ge=0)
+    fade_out_sec: float = Field(default=0.0, ge=0)
+
+
+class AudioMixData(BaseModel):
+    audio_mix_asset_id: int
+    project_id: int
+    shot_id: int
+    bgm_asset_id: int
+    voice_asset_ids: list[int]
+    mixed_audio_path: str
+    ducking_gain_db: float
+    fade_in_sec: float
+    fade_out_sec: float
+    is_selected: bool
+    created_at: datetime
+
+
+class CreateFinalVideoRequest(BaseModel):
+    resolution: str = Field(min_length=1, max_length=32)
+    include_subtitles: bool = True
+    transition_mode: str = Field(default="none", min_length=1, max_length=32)
+
+
+class FinalVideoExportData(BaseModel):
+    project_id: int
+    task_id: int
+    status: str
+    resolution: str
+    include_subtitles: bool
+    transition_mode: str
+    log_file_path: str
+    video_id: int
+    file_path: str
+
+
+class FinalVideoItem(BaseModel):
+    video_id: int
+    resolution: str
+    duration_sec: float
+    file_path: str
+    cover_image_path: str | None
+    created_at: datetime
+
+
+class FinalVideoListData(BaseModel):
+    project_id: int
+    items: list[FinalVideoItem]
+
+
+class FinalVideoDetailData(BaseModel):
+    video_id: int
+    project_id: int
+    resolution: str
+    duration_sec: float
+    file_path: str
+    cover_image_path: str | None
+    created_at: datetime
